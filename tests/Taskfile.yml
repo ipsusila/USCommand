@@ -1,0 +1,17 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Perform testing!
+
+tasks:
+  default:
+    cmds:
+      - echo "{{.GREETING}}"
+      - echo "Compiling sources..."
+      - g++ -o tests ../src/USCommand.cpp main.cpp
+      - echo "Running tests..."
+      - ./tests
+      - echo "Done!"
+    silent: true
