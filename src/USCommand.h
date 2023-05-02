@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #define USC_BROADCAST_ADDR  0
+#define USC_DEFAULT_MODULE  0
 #define USC_BUFSIZE 128
 
 enum USC_Identifier {
@@ -20,6 +21,15 @@ enum USC_Result {
     USC_Overflow
 };
 
+enum USC_Pos {
+    USC_DevicePos = 0,
+    USC_ModulePos,
+    USC_DesignationPos,
+    USC_ParamPos,
+    USC_CRCPos,
+    USC_ElementsCount
+};
+
 class USCommand {
 public:
     USCommand();
@@ -30,6 +40,7 @@ public:
     bool isBroadcast(void) const;
     bool isResponse(void) const;
     void reset(void);
+    const char * data() const;
 
 protected:
     USC_Result parseBegin(char c);
@@ -37,20 +48,24 @@ protected:
     USC_Result parseDevice(char c);
     USC_Result parseModule(char c);
     USC_Result parseDesignation(char c);
-    USC_Result parseParam(char c);
+    USC_Result parseParamKey(char c);
+    USC_Result parseParamValue(char c);
     USC_Result parseCRC(char c);
     USC_Result convertDevice(char c, uint8_t ns, USC_Result res = USC_Continue);
     USC_Result convertModule(char c, uint8_t ns, USC_Result res = USC_Continue);
+
 private:
     uint32_t _device;
     uint16_t _module;
     uint8_t _state;
-    char _begin;
     
     char _pc;
-    int _dp;
+    int _np, _bp;
     uint8_t _ni;
+    bool _record;
+
     char _data[USC_BUFSIZE+1];
+    int _pos[USC_ElementsCount];
 };
 
 #endif
