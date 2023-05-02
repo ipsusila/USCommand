@@ -41,18 +41,27 @@ int main()
             USC_Result res = cmd.parse(ch);
             //str.push_back(ch);
 
+            char *pp;
             switch(res) {
             case USC_OK:
                 chk = xorall(cmd.data());
-                printf("'%s' | Device: %d, module: %d -> %d, CHK=%X <> %X\n", 
-                    cmd.data(), cmd.device(), cmd.module(), cmd.isResponse(), cmd.checksum(), chk);
+                printf("'%s' | Device: %d, module: %d -> %d, CHK=%X (%d) <> %X\n", 
+                    cmd.data(), cmd.device(), cmd.module(), cmd.isResponse(), cmd.checksum(), chk, chk);
+                pp = cmd.designation();
+                if (pp) {
+                    printf("  Designation: `%s`\n", pp);
+                }
+                pp = cmd.param();
+                if (pp) {
+                    printf("  Param: `%s`\n", pp);
+                }
                 cmd.reset();
                 break;
             case USC_Continue:
                 break;
             default:
-                printf("'%s' (`%c`) | Err: %d, Device: %d, module: %d\n", 
-                    cmd.data(), ch, (int)res, cmd.device(), cmd.module());
+                printf("'%s' (`%c`) | Err: %d, Device: %d, module: %d, chk: %d\n", 
+                    cmd.data(), ch, (int)res, cmd.device(), cmd.module(), cmd.checksum());
                 cmd.reset();
                 break;
             }

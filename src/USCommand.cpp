@@ -19,7 +19,7 @@ enum {
     bDevice,
     bModule,
     bDesignation,
-    bParamkey,
+    bParamKey,
     bParamValue,
     bCRC
 };
@@ -42,7 +42,7 @@ static inline long toLong(char *pb, char *pe) {
     return v;
 }
 
-static inline bool isValidAlnum(char c) {
+static inline bool isValidKey(char c) {
     return ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
         (c >= 'A' && c <= 'Z') || (c == '-' || c == '_' || c == '.'));
 }
@@ -107,6 +107,7 @@ void USCommand::reset() {
     _module = 0;
     _record = false;
     _checksum = 0;
+    _hasChecksum = false;
     _data[0] = 0;
     for (uint8_t i = 0; i < USC_ElementsCount; i++) {
         _pos[i] = 0;
@@ -133,6 +134,56 @@ const char * USCommand::data(void) const {
 
 uint8_t USCommand::checksum(void) const {
     return _checksum;
+}
+bool USCommand::hasChecksum(void) const {
+    return _hasChecksum;
+}
+
+char * USCommand::designationBegin(void) {
+    int p = _pos[USC_DesignationPos];
+    if (p == 0) {
+        return nullptr;
+    }
+    return _data+p;
+}
+char * USCommand::designationEnd(void) {
+    int p = _pos[USC_DesignationEndPos];
+    if (p == 0) {
+        return nullptr;
+    }
+    return _data+p;
+}
+char * USCommand::designation(void) {
+    char *p = designationBegin();
+    char *e = designationEnd();
+    if (p && e) {
+        *e = 0;
+        return p;
+    }
+    return nullptr;
+}
+char * USCommand::paramBegin(void) {
+    int p = _pos[USC_ParamPos];
+    if (p == 0) {
+        return nullptr;
+    }
+    return _data+p;
+}
+char * USCommand::paramEnd(void) {
+    int p = _pos[USC_ParamEndPos];
+    if (p == 0) {
+        return nullptr;
+    }
+    return _data+p;
+}
+char * USCommand::param(void) {
+    char *p = paramBegin();
+    char *e = paramEnd();
+    if (p && e) {
+        *e = 0;
+        return p;
+    }
+    return nullptr;
 }
 
 USC_Result USCommand::convertDevice(char c, uint8_t ns, USC_Result res) {
@@ -268,7 +319,7 @@ USC_Result USCommand::parseModule(char c) {
 }
 USC_Result USCommand::parseDesignation(char c) {
     // Check if c is valid
-    if (isValidAlnum(c) || (c == '/' && _pc != '/')) {
+    if (isValidKey(c) || (c == '/' && _pc != '/')) {
         return USC_Continue;
     }
 
@@ -276,7 +327,7 @@ USC_Result USCommand::parseDesignation(char c) {
     case '?':
         _pos[USC_DesignationEndPos] = _np - 1;
         _pos[USC_ParamPos] = _np;
-        _state = bParamkey;
+        _state = bParamKey;
         return USC_Continue;
     case '|':
         _pos[USC_DesignationEndPos] = _np - 1;
@@ -293,20 +344,43 @@ USC_Result USCommand::parseDesignation(char c) {
 }
 USC_Result USCommand::parseParamKey(char c) {
     // Check if c is valid
-    if (isValidAlnum(c)) {
+    if (isValidKey(c)) {
         return USC_Continue;
     }
     switch(c) {
     case '=':
+        _state = bParamValue;
+        return USC_Continue;
     case '|':
+        _pos[USC_ParamEndPos] = _np - 1;
+        _pos[USC_CRCPos] = _np;
+        _state = bCRC;
+        _bp = _np;
+        return USC_Continue;
     case '$':
-        break;
+        _pos[USC_ParamEndPos] = _np - 1;
+        _state = bBegin;
+        return USC_OK;
     }
+    return USC_Unexpected;
 }
 USC_Result USCommand::parseParamValue(char c) {
-    if (_np >= USC_BUFSIZE) {
-        return USC_Overflow;
+    switch(c) {
+    case '&':
+        _state = bParamKey;
+        return USC_Continue;
+    case '|':
+        _pos[USC_ParamEndPos] = _np - 1;
+        _pos[USC_CRCPos] = _np;
+        _state = bCRC;
+        _bp = _np;
+        return USC_Continue;
+    case '$':
+        _pos[USC_ParamEndPos] = _np - 1;
+        _state = bBegin;
+        return USC_OK;
     }
+    return USC_Continue;
 }
 USC_Result USCommand::parseCRC(char c) {
     // TODO: efficient calculation method
@@ -314,6 +388,7 @@ USC_Result USCommand::parseCRC(char c) {
         return USC_Continue;
     } else if (c == '$') {
         _state = bBegin;
+        _hasChecksum = true;
 
         // compare checksum
         uint8_t chk = (uint8_t)toInt(&_data[_bp], &_data[_np]);
@@ -368,7 +443,7 @@ USC_Result USCommand::parse(char c) {
     case bDesignation:
         res = parseDesignation(c);
         break;
-    case bParamkey:
+    case bParamKey:
         res = parseParamKey(c);
         break;
     case bParamValue:

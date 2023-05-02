@@ -44,6 +44,13 @@ public:
     void reset(void);
     const char * data(void) const;
     uint8_t checksum(void) const;
+    bool hasChecksum(void) const;
+    char * designationBegin(void);
+    char * designationEnd(void);
+    char * designation(void);
+    char * paramBegin(void);
+    char * paramEnd(void);
+    char * param(void);
 
 protected:
     USC_Result parseBegin(char c);
@@ -62,6 +69,7 @@ private:
     uint16_t _module;
     uint8_t _state;
     uint8_t _checksum;
+    bool _hasChecksum;
     
     char _pc;
     int _np, _bp;
