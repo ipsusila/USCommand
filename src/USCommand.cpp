@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "USCommand.h"
 
 /**
@@ -39,6 +40,11 @@ static inline long toLong(char *pb, char *pe) {
     *pe = old;
 
     return v;
+}
+
+static inline bool isValidAlnum(char c) {
+    return ((c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
+        (c >= 'A' && c <= 'Z') || (c == '-' || c == '_' || c == '.'));
 }
 
 static inline bool isEmpty(char c) {
@@ -100,6 +106,7 @@ void USCommand::reset() {
     _device = USC_InvalidDevice;
     _module = 0;
     _record = false;
+    _checksum = 0;
     _data[0] = 0;
     for (uint8_t i = 0; i < USC_ElementsCount; i++) {
         _pos[i] = 0;
@@ -120,9 +127,14 @@ bool USCommand::isBroadcast(void) const {
 bool USCommand::isResponse(void) const {
     return _data[0] == '@';
 }
-const char * USCommand::data() const {
+const char * USCommand::data(void) const {
     return _data;
 }
+
+uint8_t USCommand::checksum(void) const {
+    return _checksum;
+}
+
 USC_Result USCommand::convertDevice(char c, uint8_t ns, USC_Result res) {
     if (_ni == 0) {
         _device = 0;
@@ -174,6 +186,7 @@ USC_Result USCommand::parseBegin(char c) {
         _record = true;
         _data[_np++] = c;
         _pos[USC_DevicePos] = _np;
+        _checksum ^= (uint8_t)c;
         return USC_Continue;
     case '@':
         _state = bEnd;
@@ -225,6 +238,7 @@ USC_Result USCommand::parseDevice(char c) {
         return convertDevice(c, bDesignation);
     case '|':
         _pos[USC_CRCPos] = _np;
+        _bp = _np;
         return convertDevice(c, bCRC);
     case '$':
         return convertDevice(c, bBegin, USC_OK);
@@ -244,6 +258,7 @@ USC_Result USCommand::parseModule(char c) {
         return convertModule(c, bDesignation);
     case '|':
         _pos[USC_CRCPos] = _np;
+        _bp = _np;
         return convertModule(c, bCRC);
     case '$':
         return convertModule(c, bBegin, USC_OK);
@@ -252,13 +267,40 @@ USC_Result USCommand::parseModule(char c) {
     return USC_Unexpected;
 }
 USC_Result USCommand::parseDesignation(char c) {
-    if (_np >= USC_BUFSIZE) {
-        return USC_Overflow;
+    // Check if c is valid
+    if (isValidAlnum(c) || (c == '/' && _pc != '/')) {
+        return USC_Continue;
     }
+
+    switch(c) {
+    case '?':
+        _pos[USC_DesignationEndPos] = _np - 1;
+        _pos[USC_ParamPos] = _np;
+        _state = bParamkey;
+        return USC_Continue;
+    case '|':
+        _pos[USC_DesignationEndPos] = _np - 1;
+        _pos[USC_CRCPos] = _np;
+        _state = bCRC;
+        _bp = _np;
+        return USC_Continue;
+    case '$':
+        _pos[USC_DesignationEndPos] = _np - 1;
+        _state = bBegin;
+        return USC_OK;
+    }
+    return USC_Unexpected;
 }
 USC_Result USCommand::parseParamKey(char c) {
-    if (_np >= USC_BUFSIZE) {
-        return USC_Overflow;
+    // Check if c is valid
+    if (isValidAlnum(c)) {
+        return USC_Continue;
+    }
+    switch(c) {
+    case '=':
+    case '|':
+    case '$':
+        break;
     }
 }
 USC_Result USCommand::parseParamValue(char c) {
@@ -267,13 +309,27 @@ USC_Result USCommand::parseParamValue(char c) {
     }
 }
 USC_Result USCommand::parseCRC(char c) {
-    if (_np >= USC_BUFSIZE) {
-        return USC_Overflow;
+    // TODO: efficient calculation method
+    if (isDigit(c)) {
+        return USC_Continue;
+    } else if (c == '$') {
+        _state = bBegin;
+
+        // compare checksum
+        uint8_t chk = (uint8_t)toInt(&_data[_bp], &_data[_np]);
+        if (chk != _checksum) {
+            return USC_Invalid;
+        }
+        return USC_OK;
     }
+    return USC_Unexpected;
 }
 
 USC_Result USCommand::parse(char c) {
     if (_record) {
+        if (_state != bCRC && _state != bEnd) {
+            _checksum ^= (uint8_t)c;
+        }
         // Save to buffer
         if (_np >= USC_BUFSIZE) {
             return USC_Overflow;

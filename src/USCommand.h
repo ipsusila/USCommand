@@ -25,7 +25,9 @@ enum USC_Pos {
     USC_DevicePos = 0,
     USC_ModulePos,
     USC_DesignationPos,
+    USC_DesignationEndPos,
     USC_ParamPos,
+    USC_ParamEndPos,
     USC_CRCPos,
     USC_ElementsCount
 };
@@ -40,7 +42,8 @@ public:
     bool isBroadcast(void) const;
     bool isResponse(void) const;
     void reset(void);
-    const char * data() const;
+    const char * data(void) const;
+    uint8_t checksum(void) const;
 
 protected:
     USC_Result parseBegin(char c);
@@ -58,6 +61,7 @@ private:
     uint32_t _device;
     uint16_t _module;
     uint8_t _state;
+    uint8_t _checksum;
     
     char _pc;
     int _np, _bp;
