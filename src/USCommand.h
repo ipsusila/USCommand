@@ -3,20 +3,22 @@
 
 #include <stdint.h>
 
-#define USC_BROADCAST_ADDR  0
-#define USC_DEFAULT_MODULE  0
+#define USC_BROADCAST_ADDR 0
+#define USC_DEFAULT_MODULE 0
 
 #ifndef USC_BUFSIZE
 #define USC_BUFSIZE 128
 #endif
 
-enum USC_Identifier {
+enum USC_Identifier
+{
     USC_Broadcast = 0x00,
     USC_InvalidDevice = UINT32_MAX,
     USC_InvalidModule = UINT16_MAX
 };
 
-enum USC_Result {
+enum USC_Result
+{
     USC_OK = 0x00,
     USC_Next,
     USC_Invalid,
@@ -24,7 +26,8 @@ enum USC_Result {
     USC_Overflow
 };
 
-enum USC_Pos {
+enum USC_Pos
+{
     USC_DevicePos = 0,
     USC_ModulePos,
     USC_DesignationPos,
@@ -36,15 +39,17 @@ enum USC_Pos {
 };
 
 class USCommand;
-class USParam {
+class USParam
+{
     friend class USCommand;
+
 public:
     USParam();
 
     bool valid() const;
     bool hasValue() const;
-    char * key();
-    char * value();
+    char *key();
+    char *value();
     int valueInt(int def = 0) const;
     long valueLong(long def = 0) const;
     float valueFloat(float def = 0) const;
@@ -59,8 +64,8 @@ private:
     bool parse();
 };
 
-
-class USCommand {
+class USCommand
+{
 public:
     USCommand();
 
@@ -70,18 +75,19 @@ public:
     bool isBroadcast(void) const;
     bool isResponse(void) const;
     void clear(void);
-    char * data(char prefix=0);
+    char *data(char prefix = 0);
     bool hasChecksum(void) const;
     uint8_t checksum(void) const;
-    bool hasDesignation() const;
-    char * designation(void);
-    bool hasParam() const;
-    USParam *param();
-    bool nextParam();
-    char * paramKey();
-    char paramKeyChar() const;
-    char * beginResponse();
-    char endResponse() const;
+    bool hasDesignation(void) const;
+    char *designation(void);
+    bool hasParam(void) const;
+    USParam *param(void);
+    bool nextParam(void);
+    char *paramKey(void);
+    char paramKeyChar(void) const;
+    char *beginResponse(void);
+    char *beginResponseCheksum(uint8_t &chk);
+    char endResponse(void) const;
 
 protected:
     USC_Result parseBegin(char c);
@@ -102,13 +108,13 @@ private:
     uint8_t _checksum;
     bool _hasChecksum;
     USParam _param;
-    
+
     char _pc;
     int _np, _bp;
     uint8_t _ni;
-    bool _record;
+    bool _capture;
 
-    char _data[USC_BUFSIZE+1];
+    char _data[USC_BUFSIZE + 1];
     int _pos[USC_ElementsCount];
 };
 

@@ -177,7 +177,7 @@ void USCommand::clear(void) {
     _state = bBegin;
     _device = USC_InvalidDevice;
     _module = 0;
-    _record = false;
+    _capture = false;
     _checksum = 0;
     _hasChecksum = false;
     _data[0] = 0;
@@ -213,6 +213,16 @@ char * USCommand::beginResponse() {
 }
 char USCommand::endResponse() const {
     return '$';
+}
+char *USCommand::beginResponseCheksum(uint8_t &chk) {
+    chk = 0;
+    char *resp = beginResponse();
+    char *p = resp;
+    while(*p != 0) {
+        chk ^= *p;
+        p++;
+    }
+    return resp;
 }
 
 uint8_t USCommand::checksum(void) const {
@@ -301,7 +311,7 @@ USC_Result USCommand::parseBegin(char c) {
         _np = 0;
         _bp = 1;
         _ni = 0;
-        _record = true;
+        _capture = true;
         _data[_np++] = c;
         _pos[USC_DevicePos] = _np;
         _checksum ^= (uint8_t)c;
@@ -334,7 +344,7 @@ USC_Result USCommand::parseEnd(char c) {
         return USC_Unexpected;
     } else if (c == '$') {
         _state = bBegin;
-        _record = false;
+        _capture = false;
         return USC_OK;
     }
 
@@ -492,7 +502,7 @@ USC_Result USCommand::parseCRC(char c) {
 }
 
 USC_Result USCommand::parse(char c) {
-    if (_record) {
+    if (_capture) {
         if (_state != bCRC && _state != bEnd) {
             _checksum ^= (uint8_t)c;
         }
