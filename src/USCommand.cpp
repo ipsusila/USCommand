@@ -1,8 +1,6 @@
 #include <stdlib.h>
 #include "USCommand.h"
 
-#include <stdio.h>
-
 /**
  * Command format:
  * !nnn.nnn.nnn.nnn:nnnnn/xxx/yyy/zzz?abc=10&xyz=11|<CRC>$
@@ -481,7 +479,6 @@ USC_Result USCommand::parse(char c) {
         if (_np >= USC_BUFSIZE) {
             return USC_Overflow;
         } else if (_pc == '\\') {
-            printf("ESC: `%c`\n", c);
             if (_state != bParamValue) {
                 // escape char only allowed in param value
                 return USC_Unexpected;
