@@ -5,7 +5,10 @@
 
 #define USC_BROADCAST_ADDR  0
 #define USC_DEFAULT_MODULE  0
+
+#ifndef USC_BUFSIZE
 #define USC_BUFSIZE 128
+#endif
 
 enum USC_Identifier {
     USC_Broadcast = 0x00,
