@@ -26,18 +26,6 @@ enum USC_Result
     USC_Overflow
 };
 
-enum USC_Pos
-{
-    USC_DevicePos = 0,
-    USC_ModulePos,
-    USC_DesignationPos,
-    USC_DesignationEndPos,
-    USC_ParamPos,
-    USC_ParamEndPos,
-    USC_CRCPos,
-    USC_ElementsCount
-};
-
 class USCommand;
 class USParam
 {
@@ -79,7 +67,7 @@ public:
     bool hasChecksum(void) const;
     uint8_t checksum(void) const;
     bool hasDesignation(void) const;
-    char *designation(void);
+    const char *designation(void) const;
     bool hasParam(void) const;
     USParam *param(void);
     bool nextParam(void);
@@ -114,8 +102,8 @@ private:
     uint8_t _ni;
     bool _capture;
 
+    char *_designation;
     char _data[USC_BUFSIZE + 1];
-    int _pos[USC_ElementsCount];
 };
 
 #endif

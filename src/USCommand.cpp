@@ -182,9 +182,7 @@ void USCommand::clear(void) {
     _hasChecksum = false;
     _data[0] = 0;
     _data[1] = 0;
-    for (uint8_t i = 0; i < USC_ElementsCount; i++) {
-        _pos[i] = 0;
-    }
+    _designation = nullptr;
 }
 
 uint32_t USCommand::device(void) const {
@@ -232,16 +230,12 @@ bool USCommand::hasChecksum(void) const {
     return _hasChecksum;
 }
 
-char * USCommand::designation(void) {
-    int p = _pos[USC_DesignationPos];
-    if (p == 0) {
-        return nullptr;
-    }
-    return _data+p;
+const char * USCommand::designation(void) const {
+   return _designation;
 }
 
 bool USCommand::hasDesignation() const {
-    return _pos[USC_DesignationPos] != 0;
+    return _designation != nullptr && *_designation != 0;
 }
 
 bool USCommand::hasParam() const {
@@ -313,7 +307,6 @@ USC_Result USCommand::parseBegin(char c) {
         _ni = 0;
         _capture = true;
         _data[_np++] = c;
-        _pos[USC_DevicePos] = _np;
         _checksum ^= (uint8_t)c;
         return USC_Next;
     case '@':
@@ -365,13 +358,11 @@ USC_Result USCommand::parseDevice(char c) {
     case ':':
         // set default module address
         _module = USC_DEFAULT_MODULE;
-        _pos[USC_ModulePos] = _np;
         return convertDevice(c, bModule);
     case '/':
-        _pos[USC_DesignationPos] = _np;
+        _designation = _data + _np;
         return convertDevice(c, bDesignation);
     case '|':
-        _pos[USC_CRCPos] = _np;
         _bp = _np;
         _data[_np-1] = 0;
         return convertDevice(c, bCRC);
@@ -390,10 +381,9 @@ USC_Result USCommand::parseModule(char c) {
 
     switch(c) {
     case '/':
-        _pos[USC_DesignationPos] = _np;
+        _designation = _data + _np;
         return convertModule(c, bDesignation);
     case '|':
-        _pos[USC_CRCPos] = _np;
         _bp = _np;
         _data[_np-1] = 0;
         return convertModule(c, bCRC);
@@ -412,21 +402,16 @@ USC_Result USCommand::parseDesignation(char c) {
 
     switch(c) {
     case '?':
-        _pos[USC_DesignationEndPos] = _np - 1;
-        _pos[USC_ParamPos] = _np;
         _state = bParamKey;
         _param._next = &_data[_np];
         _data[_np-1] = 0;
         return USC_Next;
     case '|':
-        _pos[USC_DesignationEndPos] = _np - 1;
-        _pos[USC_CRCPos] = _np;
         _state = bCRC;
         _bp = _np;
         _data[_np-1] = 0;
         return USC_Next;
     case '$':
-        _pos[USC_DesignationEndPos] = _np - 1;
         _state = bBegin;
         _data[_np-1] = 0;
         return USC_OK;
@@ -444,15 +429,12 @@ USC_Result USCommand::parseParamKey(char c) {
         _data[_np-1] = PARAM_VAL;
         return USC_Next;
     case '|':
-        _pos[USC_ParamEndPos] = _np - 1;
-        _pos[USC_CRCPos] = _np;
         _state = bCRC;
         _bp = _np;
         _data[_np-1] = PARAM_END;
         _param._end = &_data[_np];
         return USC_Next;
     case '$':
-        _pos[USC_ParamEndPos] = _np - 1;
         _state = bBegin;
         _data[_np-1] = PARAM_END;
         _param._end = &_data[_np];
@@ -467,15 +449,12 @@ USC_Result USCommand::parseParamValue(char c) {
         _data[_np-1] = PARAM_KEY;
         return USC_Next;
     case '|':
-        _pos[USC_ParamEndPos] = _np - 1;
-        _pos[USC_CRCPos] = _np;
         _state = bCRC;
         _bp = _np;
         _data[_np-1] = PARAM_END;
         _param._end = &_data[_np];
         return USC_Next;
     case '$':
-        _pos[USC_ParamEndPos] = _np - 1;
         _state = bBegin;
         _data[_np-1] = PARAM_END;
         _param._end = &_data[_np];
