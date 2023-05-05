@@ -181,6 +181,7 @@ void USCommand::clear(void) {
     _checksum = 0;
     _hasChecksum = false;
     _data[0] = 0;
+    _data[1] = 0;
     for (uint8_t i = 0; i < USC_ElementsCount; i++) {
         _pos[i] = 0;
     }
@@ -205,6 +206,13 @@ char * USCommand::data(char prefix) {
         _data[0] = prefix;
     }
     return _data;
+}
+char * USCommand::beginResponse() {
+    _data[0] = '@';
+    return _data;
+}
+char USCommand::endResponse() const {
+    return '$';
 }
 
 uint8_t USCommand::checksum(void) const {

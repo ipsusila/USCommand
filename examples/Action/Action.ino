@@ -1,12 +1,14 @@
 #include <USCommand.h>
 
+#define DEVICE 11
 USCommand cmd;
 
-void setup() {
-  Serial.begin(9600);
+void printErrorThenClear(int res, char ch) {
+  Serial.println();
+  Serial.print("Error:");
+  Serial.print(res);
+  Serial.println(ch);
   cmd.clear();
-
-  Serial.println(F("Print USCommand contents"));
 }
 
 void printCommand() {
@@ -16,65 +18,100 @@ void printCommand() {
   Serial.println(cmd.device());
   Serial.print(F("Module        : "));
   Serial.println(cmd.module());
-  
+
   if (cmd.hasDesignation()) {
     Serial.print(F("Designation   : "));
     Serial.println(cmd.designation());
   }
-  if (cmd.hasParam()) {
-    USParam *p;
-    while(cmd.nextParam()) {
-      p = cmd.param();
-      Serial.print(F("  Param> "));
-      Serial.print(p->key());
-      if (p->hasValue()) {
-        Serial.print(':');
-        Serial.print(p->value());
-      }
-      Serial.println();
-    }
+
+  // Note: do not iterate param, since it's one time operation
+  // it overwrite buffer content, and it's not reversible (rewindable)
+}
+
+void handleCommand(bool verbose) {
+  if (verbose) {
+    printCommand();
   }
-  char *d = cmd.data();
-  *d = '@';
-  Serial.println("Response:");
-  Serial.println(d);
-  Serial.print(F("<<\nANY DATA\n"));
-  Serial.print('$');
+
+  if (!cmd.isBroadcast() && cmd.device() != DEVICE) {
+    Serial.print(F("Only handle broadcast command on device: "));
+    Serial.println(DEVICE);
+    return;
+  }
+
+  // module
+  // 0: print version
+  // 1: motor
+  // 
+  // handle:
+  // !11:1/forward?s=10$
+  switch(cmd.module()) {
+  case 0:
+    Serial.println(cmd.beginResponse());
+    Serial.println(F("Action v1.0.0"));
+    Serial.println(cmd.endResponse());
+    break;
+  case 1:
+    if (!cmd.hasDesignation()) {
+      Serial.println(F("Designation not defined!"));
+      return;
+    }
+    if (strcmp_P(cmd.designation(), PSTR("forward")) == 0) {
+      int step = 0;
+      if (cmd.nextParam() && cmd.paramKeyChar() == 's') {
+        step = cmd.param()->valueInt();
+      }
+      Serial.println(cmd.beginResponse());
+      Serial.print(F("MOVE FORWARD="));
+      Serial.println(step);
+      Serial.println(cmd.endResponse());
+    } else {
+      Serial.print(F("Unknown designation:"));
+      Serial.println(cmd.designation());
+    }
+    break;
+  default:
+    Serial.print(F("Unknown module:"));
+    Serial.print(cmd.module());
+    break;
+  }
+
+  cmd.clear();
 }
 
 void cmdLoop() {
-
-}
-
-void loop() {
-  if (Serial.available()) {
-    USC_Result res;
-    int ch = Serial.read();
-    while (ch != -1) {
-      Serial.print((char)ch);
-      res = cmd.parse(ch);
-      switch(res) {
+  USC_Result res;
+  int ch = Serial.read();
+  while (ch != -1) {
+    res = cmd.parse(ch);
+    switch (res) {
       case USC_OK:
         if (cmd.isResponse()) {
           Serial.println(F("Retrive response data"));
         } else {
-          Serial.println();
-          printCommand();
+          handleCommand(true);
           cmd.clear();
         }
         break;
       case USC_Next:
         break;
       default:
-        Serial.println();
-        Serial.print("Error:");
-        Serial.print((int)res);
-        Serial.println((char)ch);
-        cmd.clear();
+        printErrorThenClear(res, ch);
         break;
-      }
-
-      ch = Serial.read();
     }
+    ch = Serial.read();
+  }
+}
+
+void setup() {
+  Serial.begin(9600);
+  cmd.clear();
+
+  Serial.println(F("Print USCommand contents"));
+}
+
+void loop() {
+  if (Serial.available()) {
+    cmdLoop();
   }
 }

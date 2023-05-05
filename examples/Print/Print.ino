@@ -33,12 +33,10 @@ void printCommand() {
       Serial.println();
     }
   }
-  char *d = cmd.data();
-  *d = '@';
   Serial.println("Response:");
-  Serial.println(d);
+  Serial.println(cmd.beginResponse());
   Serial.print(F("<<\nANY DATA\n"));
-  Serial.print('$');
+  Serial.print(cmd.endResponse());
 }
 
 void loop() {

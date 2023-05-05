@@ -77,6 +77,8 @@ public:
     bool nextParam();
     char * paramKey();
     char paramKeyChar() const;
+    char * beginResponse();
+    char endResponse() const;
 
 protected:
     USC_Result parseBegin(char c);
