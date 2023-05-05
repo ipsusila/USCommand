@@ -98,9 +98,9 @@ static inline char unescape(char c) {
 }
 
 USParam::USParam() {
-    reset();
+    clear();
 }
-void USParam::reset() {
+void USParam::clear() {
     _key = nullptr;
     _value = nullptr;
     _next = nullptr;
@@ -167,10 +167,10 @@ float USParam::valueFloat(float def) const {
 
 
 USCommand::USCommand() {
-    reset();
+    clear();
 }
 
-void USCommand::reset() {
+void USCommand::clear(void) {
     _pc = '\0';
     _np = 0;
     _ni = 0;

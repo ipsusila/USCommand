@@ -4,6 +4,7 @@ USCommand cmd;
 
 void setup() {
   Serial.begin(9600);
+  cmd.clear();
 
   Serial.println(F("Print USCommand contents"));
 }
@@ -39,6 +40,10 @@ void printCommand() {
   Serial.println(d);
   Serial.print(F("<<\nANY DATA\n"));
   Serial.print('$');
+}
+
+void cmdLoop() {
+
 }
 
 void loop() {

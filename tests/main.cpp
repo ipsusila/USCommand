@@ -19,7 +19,7 @@ uint8_t xorall(const char *data) {
 int main()
 {
     USCommand cmd;
-    cmd.reset();
+    cmd.clear();
 
     const char *test = "!0.0.2.3:123|AA$";
     printf("Checksum: %s -> %X\n", test, xorall(test));
@@ -61,14 +61,14 @@ int main()
                     }
                 }
                 printf("\n");
-                cmd.reset();
+                cmd.clear();
                 break;
             case USC_Next:
                 break;
             default:
                 printf("'%s' (`%c`) | Err: %d, Device: %d, module: %d, chk: %d\n", 
                     cmd.data(), ch, (int)res, cmd.device(), cmd.module(), cmd.checksum());
-                cmd.reset();
+                cmd.clear();
                 break;
             }
         }

@@ -52,7 +52,7 @@ private:
     char *_next;
     char *_end;
 
-    void reset(void);
+    void clear(void);
     bool parse();
 };
 
@@ -66,10 +66,10 @@ public:
     uint16_t module(void) const;
     bool isBroadcast(void) const;
     bool isResponse(void) const;
-    void reset(void);
+    void clear(void);
     const char * data(void) const;
-    uint8_t checksum(void) const;
     bool hasChecksum(void) const;
+    uint8_t checksum(void) const;
     bool hasDesignation() const;
     char * designation(void);
     bool hasParam() const;
