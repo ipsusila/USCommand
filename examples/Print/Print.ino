@@ -1,3 +1,6 @@
+// modify buffer size to 64-bytes
+// must be called before include.
+#define USC_BUFSIZE 64
 #include <USCommand.h>
 
 USCommand cmd;
@@ -5,7 +8,8 @@ USCommand cmd;
 void setup() {
   Serial.begin(9600);
 
-  Serial.println(F("Print USCommand contents"));
+  Serial.print(F("Print USCommand contents:"));
+  Serial.println(USC_BUFSIZE);
 }
 
 void printCommand() {

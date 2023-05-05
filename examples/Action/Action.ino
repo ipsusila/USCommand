@@ -1,3 +1,6 @@
+// modify buffer size to 64-bytes
+// must be called before include.
+// #define USC_BUFSIZE 64
 #include <USCommand.h>
 
 #define DEVICE 11
