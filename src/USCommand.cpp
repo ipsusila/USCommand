@@ -355,8 +355,10 @@ USC_Result USCommand::parseDevice(char c) {
     case '|':
         _pos[USC_CRCPos] = _np;
         _bp = _np;
+        _data[_np-1] = 0;
         return convertDevice(c, bCRC);
     case '$':
+        _data[_np-1] = 0;
         return convertDevice(c, bBegin, USC_OK);
     }
 
@@ -375,8 +377,10 @@ USC_Result USCommand::parseModule(char c) {
     case '|':
         _pos[USC_CRCPos] = _np;
         _bp = _np;
+        _data[_np-1] = 0;
         return convertModule(c, bCRC);
     case '$':
+        _data[_np-1] = 0;
         return convertModule(c, bBegin, USC_OK);
     }
 
