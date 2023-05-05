@@ -302,7 +302,13 @@ USC_Result USCommand::parseBegin(char c) {
 }
 USC_Result USCommand::parseEnd(char c) {
     if (_pc == '\\') {
-        if (unescape(c) != 0) {
+        char ec = unescape(c);
+        if (ec != 0) {
+            if (ec == '\\') {
+                _pc = 0;
+            } else {
+                _pc = c;
+            }
             return USC_Next;
         }
         return USC_Unexpected;
