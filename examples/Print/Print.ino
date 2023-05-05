@@ -3,7 +3,7 @@
 #define USC_BUFSIZE 64
 #include <USCommand.h>
 
-USCommand cmd;
+usc::Command cmd;
 
 void setup() {
   Serial.begin(9600);
@@ -25,7 +25,7 @@ void printCommand() {
     Serial.println(cmd.designation());
   }
   if (cmd.hasParam()) {
-    USParam *p;
+    usc::Param *p;
     while(cmd.nextParam()) {
       p = cmd.param();
       Serial.print(F("  Param> "));
@@ -45,13 +45,13 @@ void printCommand() {
 
 void loop() {
   if (Serial.available()) {
-    USC_Result res;
+    usc::Result res;
     int ch = Serial.read();
     while (ch != -1) {
       Serial.print((char)ch);
       res = cmd.parse(ch);
       switch(res) {
-      case USC_OK:
+      case usc::OK:
         if (cmd.isResponse()) {
           Serial.println(F("Retrive response data"));
         } else {
@@ -60,7 +60,7 @@ void loop() {
           cmd.clear();
         }
         break;
-      case USC_Next:
+      case usc::Next:
         break;
       default:
         Serial.println();

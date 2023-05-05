@@ -18,7 +18,7 @@ uint8_t xorall(const char *data) {
 
 int main()
 {
-    USCommand cmd;
+    usc::Command cmd;
     cmd.clear();
 
     const char *test = "!0.0.2.3:123|AA$";
@@ -38,13 +38,13 @@ int main()
             }
             
 
-            USC_Result res = cmd.parse(ch);
+            usc::Result res = cmd.parse(ch);
             //str.push_back(ch);
 
             char *pc;
-            USParam *pp;
+            usc::Param *pp;
             switch(res) {
-            case USC_OK:
+            case usc::OK:
                 chk = xorall(cmd.data());
                 printf("'%s' | Device: %d, module: %d -> %d, CHK=%X (%d) <> %X\n", 
                     cmd.data(), cmd.device(), cmd.module(), cmd.isResponse(), cmd.checksum(), chk, chk);
@@ -63,7 +63,7 @@ int main()
                 printf("\n");
                 cmd.clear();
                 break;
-            case USC_Next:
+            case usc::Next:
                 break;
             default:
                 printf("'%s' (`%c`) | Err: %d, Device: %d, module: %d, chk: %d\n", 

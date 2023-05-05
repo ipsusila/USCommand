@@ -4,7 +4,7 @@
 #include <USCommand.h>
 
 #define DEVICE 11
-USCommand cmd;
+usc::Command cmd;
 
 void printErrorThenClear(int res, char ch) {
   Serial.println();
@@ -83,12 +83,12 @@ void handleCommand(bool verbose) {
 }
 
 void cmdLoop() {
-  USC_Result res;
+  usc::Result res;
   int ch = Serial.read();
   while (ch != -1) {
     res = cmd.parse(ch);
     switch (res) {
-      case USC_OK:
+      case usc::OK:
         if (cmd.isResponse()) {
           Serial.println(F("Retrive response data"));
         } else {
@@ -96,7 +96,7 @@ void cmdLoop() {
           cmd.clear();
         }
         break;
-      case USC_Next:
+      case usc::Next:
         break;
       default:
         printErrorThenClear(res, ch);
