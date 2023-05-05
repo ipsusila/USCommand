@@ -15,7 +15,7 @@ enum USC_Identifier {
 
 enum USC_Result {
     USC_OK = 0x00,
-    USC_Continue,
+    USC_Next,
     USC_Invalid,
     USC_Unexpected,
     USC_Overflow
@@ -31,6 +31,31 @@ enum USC_Pos {
     USC_CRCPos,
     USC_ElementsCount
 };
+
+class USCommand;
+class USParam {
+    friend class USCommand;
+public:
+    USParam();
+
+    bool valid() const;
+    bool hasValue() const;
+    char * key();
+    char * value();
+    int valueInt(int def = 0) const;
+    long valueLong(long def = 0) const;
+    float valueFloat(float def = 0) const;
+
+private:
+    char *_key;
+    char *_value;
+    char *_next;
+    char *_end;
+
+    void reset(void);
+    bool parse();
+};
+
 
 class USCommand {
 public:
@@ -48,9 +73,9 @@ public:
     char * designationBegin(void);
     char * designationEnd(void);
     char * designation(void);
-    char * paramBegin(void);
-    char * paramEnd(void);
-    char * param(void);
+    bool hasParam() const;
+    USParam *param();
+    bool nextParam();
 
 protected:
     USC_Result parseBegin(char c);
@@ -61,8 +86,8 @@ protected:
     USC_Result parseParamKey(char c);
     USC_Result parseParamValue(char c);
     USC_Result parseCRC(char c);
-    USC_Result convertDevice(char c, uint8_t ns, USC_Result res = USC_Continue);
-    USC_Result convertModule(char c, uint8_t ns, USC_Result res = USC_Continue);
+    USC_Result convertDevice(char c, uint8_t ns, USC_Result res = USC_Next);
+    USC_Result convertModule(char c, uint8_t ns, USC_Result res = USC_Next);
 
 private:
     uint32_t _device;
@@ -70,6 +95,7 @@ private:
     uint8_t _state;
     uint8_t _checksum;
     bool _hasChecksum;
+    USParam _param;
     
     char _pc;
     int _np, _bp;

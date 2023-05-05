@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
 #include "USCommand.h"
 
 /**
@@ -12,6 +11,10 @@
  * !1:3/format$     -- format module 3
  * !1:3/w?0=1&1=2$  -- write to module 3 with addr 0 set to 1 and addr 1 set to 2
 */
+
+#define PARAM_END 0x00
+#define PARAM_KEY 0x01
+#define PARAM_VAL 0x02
 
 enum {
     bBegin,
@@ -94,6 +97,75 @@ static inline char unescape(char c) {
     return 0;
 }
 
+USParam::USParam() {
+    reset();
+}
+void USParam::reset() {
+    _key = nullptr;
+    _value = nullptr;
+    _next = nullptr;
+    _end = nullptr;
+}
+
+bool USParam::parse() {
+    if (_next == nullptr || _next >= _end) {
+        return false;
+    }
+    _key = _next;
+    _value = nullptr;
+
+    char *p = _next;
+    while (p != _end) {
+        switch (*p) {
+        case PARAM_END:
+        case PARAM_KEY:
+            *p = 0;
+            _next = ++p;
+            return true;
+        case PARAM_VAL:
+            _key = _next;
+            _value = p+1;
+            *p = 0;
+            break;
+        }
+        p++;
+    }
+    return false;
+}
+
+bool USParam::valid() const {
+    return _next != nullptr && _next < _end;
+}
+
+bool USParam::hasValue() const {
+    return _value != nullptr;
+}
+char * USParam::key() {
+    return _key;
+}
+char * USParam::value() {
+    return _value;
+}
+int USParam::valueInt(int def) const {
+    if (_value) {
+        return atoi(_value);
+    }
+    return def;
+}
+long USParam::valueLong(long def) const {
+    if (_value) {
+        return atol(_value);
+    }
+    return def;
+}
+float USParam::valueFloat(float def) const {
+    if (_value) {
+        return atof(_value);
+    }
+    return def;
+}
+
+
 USCommand::USCommand() {
     reset();
 }
@@ -162,28 +234,15 @@ char * USCommand::designation(void) {
     }
     return nullptr;
 }
-char * USCommand::paramBegin(void) {
-    int p = _pos[USC_ParamPos];
-    if (p == 0) {
-        return nullptr;
-    }
-    return _data+p;
+
+bool USCommand::hasParam() const {
+    return _param.valid();
 }
-char * USCommand::paramEnd(void) {
-    int p = _pos[USC_ParamEndPos];
-    if (p == 0) {
-        return nullptr;
-    }
-    return _data+p;
+USParam * USCommand::param() {
+    return &_param;
 }
-char * USCommand::param(void) {
-    char *p = paramBegin();
-    char *e = paramEnd();
-    if (p && e) {
-        *e = 0;
-        return p;
-    }
-    return nullptr;
+bool USCommand::nextParam() {
+    return _param.parse();
 }
 
 USC_Result USCommand::convertDevice(char c, uint8_t ns, USC_Result res) {
@@ -238,16 +297,16 @@ USC_Result USCommand::parseBegin(char c) {
         _data[_np++] = c;
         _pos[USC_DevicePos] = _np;
         _checksum ^= (uint8_t)c;
-        return USC_Continue;
+        return USC_Next;
     case '@':
         _state = bEnd;
         _np = 0;
         _data[_np++] = c;
         _data[_np] = 0;
-        return USC_Continue;
+        return USC_Next;
     default:
         if (isEmpty(c)) {
-            return USC_Continue;
+            return USC_Next;
         }
     }
 
@@ -256,7 +315,7 @@ USC_Result USCommand::parseBegin(char c) {
 USC_Result USCommand::parseEnd(char c) {
     if (_pc == '\\') {
         if (unescape(c) != 0) {
-            return USC_Continue;
+            return USC_Next;
         }
         return USC_Unexpected;
     } else if (c == '$') {
@@ -265,13 +324,13 @@ USC_Result USCommand::parseEnd(char c) {
         return USC_OK;
     }
 
-    return USC_Continue;
+    return USC_Next;
 }
 
 USC_Result USCommand::parseDevice(char c) {
     // wait terminated
     if (isDigit(c)) {
-        return USC_Continue;
+        return USC_Next;
     }
 
     switch(c) {
@@ -300,7 +359,7 @@ USC_Result USCommand::parseDevice(char c) {
 USC_Result USCommand::parseModule(char c) {
     // check for overflow
     if (isDigit(c)) {
-        return USC_Continue;
+        return USC_Next;
     }
 
     switch(c) {
@@ -320,7 +379,7 @@ USC_Result USCommand::parseModule(char c) {
 USC_Result USCommand::parseDesignation(char c) {
     // Check if c is valid
     if (isValidKey(c) || (c == '/' && _pc != '/')) {
-        return USC_Continue;
+        return USC_Next;
     }
 
     switch(c) {
@@ -328,13 +387,14 @@ USC_Result USCommand::parseDesignation(char c) {
         _pos[USC_DesignationEndPos] = _np - 1;
         _pos[USC_ParamPos] = _np;
         _state = bParamKey;
-        return USC_Continue;
+        _param._next = &_data[_np];
+        return USC_Next;
     case '|':
         _pos[USC_DesignationEndPos] = _np - 1;
         _pos[USC_CRCPos] = _np;
         _state = bCRC;
         _bp = _np;
-        return USC_Continue;
+        return USC_Next;
     case '$':
         _pos[USC_DesignationEndPos] = _np - 1;
         _state = bBegin;
@@ -345,21 +405,26 @@ USC_Result USCommand::parseDesignation(char c) {
 USC_Result USCommand::parseParamKey(char c) {
     // Check if c is valid
     if (isValidKey(c)) {
-        return USC_Continue;
+        return USC_Next;
     }
     switch(c) {
     case '=':
         _state = bParamValue;
-        return USC_Continue;
+        _data[_np-1] = PARAM_VAL;
+        return USC_Next;
     case '|':
         _pos[USC_ParamEndPos] = _np - 1;
         _pos[USC_CRCPos] = _np;
         _state = bCRC;
         _bp = _np;
-        return USC_Continue;
+        _data[_np-1] = PARAM_END;
+        _param._end = &_data[_np];
+        return USC_Next;
     case '$':
         _pos[USC_ParamEndPos] = _np - 1;
         _state = bBegin;
+        _data[_np-1] = PARAM_END;
+        _param._end = &_data[_np];
         return USC_OK;
     }
     return USC_Unexpected;
@@ -368,24 +433,29 @@ USC_Result USCommand::parseParamValue(char c) {
     switch(c) {
     case '&':
         _state = bParamKey;
-        return USC_Continue;
+        _data[_np-1] = PARAM_KEY;
+        return USC_Next;
     case '|':
         _pos[USC_ParamEndPos] = _np - 1;
         _pos[USC_CRCPos] = _np;
         _state = bCRC;
         _bp = _np;
-        return USC_Continue;
+        _data[_np-1] = PARAM_END;
+        _param._end = &_data[_np];
+        return USC_Next;
     case '$':
         _pos[USC_ParamEndPos] = _np - 1;
         _state = bBegin;
+        _data[_np-1] = PARAM_END;
+        _param._end = &_data[_np];
         return USC_OK;
     }
-    return USC_Continue;
+    return USC_Next;
 }
 USC_Result USCommand::parseCRC(char c) {
     // TODO: efficient calculation method
     if (isDigit(c)) {
-        return USC_Continue;
+        return USC_Next;
     } else if (c == '$') {
         _state = bBegin;
         _hasChecksum = true;
@@ -417,7 +487,7 @@ USC_Result USCommand::parse(char c) {
             if (ec != 0) {
                 _data[_np++] = ec;
                 _data[_np] = 0;
-                return USC_Continue;
+                return USC_Next;
             }
             return USC_Invalid;
         }
