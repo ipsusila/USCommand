@@ -211,28 +211,16 @@ bool USCommand::hasChecksum(void) const {
     return _hasChecksum;
 }
 
-char * USCommand::designationBegin(void) {
+char * USCommand::designation(void) {
     int p = _pos[USC_DesignationPos];
     if (p == 0) {
         return nullptr;
     }
     return _data+p;
 }
-char * USCommand::designationEnd(void) {
-    int p = _pos[USC_DesignationEndPos];
-    if (p == 0) {
-        return nullptr;
-    }
-    return _data+p;
-}
-char * USCommand::designation(void) {
-    char *p = designationBegin();
-    char *e = designationEnd();
-    if (p && e) {
-        *e = 0;
-        return p;
-    }
-    return nullptr;
+
+bool USCommand::hasDesignation() const {
+    return _pos[USC_DesignationPos] != 0;
 }
 
 bool USCommand::hasParam() const {
@@ -254,7 +242,7 @@ USC_Result USCommand::convertDevice(char c, uint8_t ns, USC_Result res) {
     // invalid address segment count
     if (_ni > 4) {
         return USC_Unexpected;
-    } else if ((_np - _bp) > 3) {
+    } else if ((_np - _bp) > 4) {
         // more than 3 digits
         return USC_Unexpected;
     }
@@ -273,7 +261,7 @@ USC_Result USCommand::convertDevice(char c, uint8_t ns, USC_Result res) {
 }
 
 USC_Result USCommand::convertModule(char c, uint8_t ns, USC_Result res) {
-    if ((_np - _bp) > 5) {
+    if ((_np - _bp) > 6) {
         // more than 5 digits
         return USC_Unexpected;
     }
@@ -388,16 +376,19 @@ USC_Result USCommand::parseDesignation(char c) {
         _pos[USC_ParamPos] = _np;
         _state = bParamKey;
         _param._next = &_data[_np];
+        _data[_np-1] = 0;
         return USC_Next;
     case '|':
         _pos[USC_DesignationEndPos] = _np - 1;
         _pos[USC_CRCPos] = _np;
         _state = bCRC;
         _bp = _np;
+        _data[_np-1] = 0;
         return USC_Next;
     case '$':
         _pos[USC_DesignationEndPos] = _np - 1;
         _state = bBegin;
+        _data[_np-1] = 0;
         return USC_OK;
     }
     return USC_Unexpected;

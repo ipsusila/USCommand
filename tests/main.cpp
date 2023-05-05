@@ -48,9 +48,8 @@ int main()
                 chk = xorall(cmd.data());
                 printf("'%s' | Device: %d, module: %d -> %d, CHK=%X (%d) <> %X\n", 
                     cmd.data(), cmd.device(), cmd.module(), cmd.isResponse(), cmd.checksum(), chk, chk);
-                pc = cmd.designation();
-                if (pc) {
-                    printf("  Designation: `%s`\n", pc);
+                if (cmd.hasDesignation()) {
+                    printf("  Designation: `%s`\n", cmd.designation());
                 }
                 while (cmd.nextParam()) {
                     pp = cmd.param();

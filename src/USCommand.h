@@ -70,8 +70,7 @@ public:
     const char * data(void) const;
     uint8_t checksum(void) const;
     bool hasChecksum(void) const;
-    char * designationBegin(void);
-    char * designationEnd(void);
+    bool hasDesignation() const;
     char * designation(void);
     bool hasParam() const;
     USParam *param();
