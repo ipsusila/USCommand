@@ -67,7 +67,7 @@ public:
     bool isBroadcast(void) const;
     bool isResponse(void) const;
     void clear(void);
-    const char * data(void) const;
+    char * data(char prefix=0);
     bool hasChecksum(void) const;
     uint8_t checksum(void) const;
     bool hasDesignation() const;

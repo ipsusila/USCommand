@@ -200,7 +200,10 @@ bool USCommand::isBroadcast(void) const {
 bool USCommand::isResponse(void) const {
     return _data[0] == '@';
 }
-const char * USCommand::data(void) const {
+char * USCommand::data(char prefix) {
+    if (prefix != 0) {
+        _data[0] = prefix;
+    }
     return _data;
 }
 
