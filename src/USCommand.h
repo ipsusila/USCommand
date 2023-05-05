@@ -75,6 +75,8 @@ public:
     bool hasParam() const;
     USParam *param();
     bool nextParam();
+    char * paramKey();
+    char paramKeyChar() const;
 
 protected:
     USC_Result parseBegin(char c);

@@ -229,6 +229,15 @@ bool USCommand::hasParam() const {
 USParam * USCommand::param() {
     return &_param;
 }
+char * USCommand::paramKey() {
+    return _param._key;
+}
+char USCommand::paramKeyChar() const {
+    if (_param._key) {
+        return *(_param._key);
+    }
+    return 0;
+}
 bool USCommand::nextParam() {
     return _param.parse();
 }
