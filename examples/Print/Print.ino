@@ -20,9 +20,9 @@ void printCommand() {
   Serial.print(F("Module        : "));
   Serial.println(cmd.module());
   
-  if (cmd.hasDesignation()) {
-    Serial.print(F("Designation   : "));
-    Serial.println(cmd.designation());
+  if (cmd.hasAction()) {
+    Serial.print(F("Action      : "));
+    Serial.println(cmd.action());
   }
   if (cmd.hasParam()) {
     while(cmd.nextParam()) {

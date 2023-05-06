@@ -22,9 +22,9 @@ void printCommand() {
   Serial.print(F("Module        : "));
   Serial.println(cmd.module());
 
-  if (cmd.hasDesignation()) {
-    Serial.print(F("Designation   : "));
-    Serial.println(cmd.designation());
+  if (cmd.hasAction()) {
+    Serial.print(F("Action      : "));
+    Serial.println(cmd.action());
   }
 
   // Note: do not iterate param, since it's one time operation
@@ -55,11 +55,11 @@ void handleCommand(bool verbose) {
     Serial.println(cmd.endResponse());
     break;
   case 1:
-    if (!cmd.hasDesignation()) {
-      Serial.println(F("Designation not defined!"));
+    if (!cmd.hasAction()) {
+      Serial.println(F("Action not defined!"));
       return;
     }
-    if (strcmp_P(cmd.designation(), PSTR("forward")) == 0) {
+    if (strcmp_P(cmd.action(), PSTR("forward")) == 0) {
       int step = 0;
       if (cmd.nextParam() && cmd.param().keyChar() == 's') {
         step = cmd.param().valueInt();
@@ -69,8 +69,8 @@ void handleCommand(bool verbose) {
       Serial.println(step);
       Serial.println(cmd.endResponse());
     } else {
-      Serial.print(F("Unknown designation:"));
-      Serial.println(cmd.designation());
+      Serial.print(F("Unknown action:"));
+      Serial.println(cmd.action());
     }
     break;
   default:

@@ -92,8 +92,8 @@ namespace usc
         char *data(char prefix = 0);
         bool hasChecksum(void) const;
         uint8_t checksum(void) const;
-        bool hasDesignation(void) const;
-        const char *designation(void) const;
+        bool hasAction(void) const;
+        const char *action(void) const;
         bool hasParam(void) const;
         Param &param(void);
         bool nextParam(void);
@@ -106,7 +106,7 @@ namespace usc
         Result parseEnd(char c);
         Result parseDevice(char c);
         Result parseModule(char c);
-        Result parseDesignation(char c);
+        Result parseAction(char c);
         Result parseParamKey(char c);
         Result parseParamValue(char c);
         Result parseCRC(char c);
@@ -126,7 +126,7 @@ namespace usc
         uint8_t _ni;
         bool _capture;
 
-        char *_designation;
+        char *_action;
         char _data[USC_BUFSIZE + 1];
     };
 };

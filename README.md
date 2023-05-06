@@ -7,7 +7,7 @@ Universal String command for Arduino.
 Command mimics URL format and can be used to control multiple board connected e.g. using RS485.
 
 ```
-!aaa[.aaa.aaa.aaa][:mmmmm][/designation/designation][?param=key&param=key&param][|checksum]$
+!aaa[.aaa.aaa.aaa][:mmmmm][/action/action][?param=key&param=key&param][|checksum]$
 ```
 
 Example commands:
@@ -34,7 +34,7 @@ Definitions of each fields:
 1. `!` denotes beginning of a command, while `@` denotes beginning of response
 2. `aaa[.aaa.aaa.aaa]` denotes device address
 3. `:mmmmm` denotes module address
-4. `designation/designation` denotes designation
+4. `action/action` denotes action
 5. `param=key&param=key&param` denotes list of parameters and optionally its values
 6. `|checksum` denotes checksum calculated by XORing all characters from `!` to before `|`
 7. `$` denotes end of a command.

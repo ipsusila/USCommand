@@ -22,7 +22,7 @@ enum
     bEnd,
     bDevice,
     bModule,
-    bDesignation,
+    bAction,
     bParamKey,
     bParamValue,
     bCRC
@@ -248,7 +248,7 @@ namespace usc
         _hasChecksum = false;
         _data[0] = 0;
         _data[1] = 0;
-        _designation = nullptr;
+        _action = nullptr;
         _param.clear();
     }
 
@@ -309,14 +309,14 @@ namespace usc
         return _hasChecksum;
     }
 
-    const char *Command::designation(void) const
+    const char *Command::action(void) const
     {
-        return _designation;
+        return _action;
     }
 
-    bool Command::hasDesignation() const
+    bool Command::hasAction() const
     {
-        return _designation != nullptr && *_designation != 0;
+        return _action != nullptr && *_action != 0;
     }
 
     bool Command::hasParam() const
@@ -457,8 +457,8 @@ namespace usc
             _module = USC_DEFAULT_MODULE;
             return convertDevice(c, bModule);
         case '/':
-            _designation = _data + _np;
-            return convertDevice(c, bDesignation);
+            _action = _data + _np;
+            return convertDevice(c, bAction);
         case '|':
             _bp = _np;
             _data[_np - 1] = 0;
@@ -481,8 +481,8 @@ namespace usc
         switch (c)
         {
         case '/':
-            _designation = _data + _np;
-            return convertModule(c, bDesignation);
+            _action = _data + _np;
+            return convertModule(c, bAction);
         case '|':
             _bp = _np;
             _data[_np - 1] = 0;
@@ -494,7 +494,7 @@ namespace usc
 
         return Unexpected;
     }
-    Result Command::parseDesignation(char c)
+    Result Command::parseAction(char c)
     {
         // Check if c is valid
         if (isValidKey(c) || (c == '/' && _pc != '/'))
@@ -653,8 +653,8 @@ namespace usc
         case bModule:
             res = parseModule(c);
             break;
-        case bDesignation:
-            res = parseDesignation(c);
+        case bAction:
+            res = parseAction(c);
             break;
         case bParamKey:
             res = parseParamKey(c);

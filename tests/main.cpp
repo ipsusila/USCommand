@@ -49,8 +49,8 @@ int main()
                 printf("'%s' | Device: %d, module: %d -> %d, Par: %d, CHK=%X (%d) <> %X\n", 
                     cmd.data(), cmd.device(), cmd.module(), cmd.isResponse(), 
                     cmd.param().count(), cmd.checksum(), chk, chk);
-                if (cmd.hasDesignation()) {
-                    printf("  Designation: `%s`\n", cmd.designation());
+                if (cmd.hasAction()) {
+                    printf("  Action: `%s`\n", cmd.action());
                 }
                 while (cmd.nextParam()) {
                     usc::Param &pp = cmd.param();
