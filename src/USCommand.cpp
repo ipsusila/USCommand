@@ -5,11 +5,11 @@
  * Command format:
  * !nnn.nnn.nnn.nnn:nnnnn/xxx/yyy/zzz?abc=10&xyz=11|<CRC>$
  * Example:
- * !1:10/s$         -- start module 10
- * !1:10/e$         -- end module 10
- * !1:10/b?t=10$    -- begin module 10 with param `t` set to 10
- * !1:3/format$     -- format module 3
- * !1:3/w?0=1&1=2$  -- write to module 3 with addr 0 set to 1 and addr 1 set to 2
+ * !1:10/s$         -- start component 10
+ * !1:10/e$         -- end component 10
+ * !1:10/b?t=10$    -- begin component 10 with param `t` set to 10
+ * !1:3/format$     -- format component 3
+ * !1:3/w?0=1&1=2$  -- write to component 3 with addr 0 set to 1 and addr 1 set to 2
  */
 
 #define PARAM_END 0x00
@@ -21,7 +21,7 @@ enum
     bBegin,
     bEnd,
     bDevice,
-    bModule,
+    bComponent,
     bAction,
     bParamKey,
     bParamValue,
@@ -252,7 +252,7 @@ namespace usc
         _ni = 0;
         _state = bBegin;
         _device = InvalidDevice;
-        _module = 0;
+        _component = 0;
         _capture = false;
         _checksum = 0;
         _hasChecksum = false;
@@ -267,9 +267,9 @@ namespace usc
         return _device;
     }
 
-    uint16_t Command::module(void) const
+    uint16_t Command::component(void) const
     {
-        return _module;
+        return _component;
     }
 
     bool Command::isBroadcast(void) const
@@ -366,7 +366,7 @@ namespace usc
         return res;
     }
 
-    Result Command::convertModule(char c, uint8_t ns, Result res)
+    Result Command::convertComponent(char c, uint8_t ns, Result res)
     {
         if ((_np - _bp) > 6)
         {
@@ -375,7 +375,7 @@ namespace usc
         }
 
         // convert and assign address
-        _module = (uint16_t)toLong(&_data[_bp], &_data[_np]);
+        _component = (uint16_t)toLong(&_data[_bp], &_data[_np]);
         _state = ns;
         _bp = _np;
 
@@ -454,9 +454,9 @@ namespace usc
         case '.':
             return convertDevice(c, bDevice);
         case ':':
-            // set default module address
-            _module = USC_DEFAULT_MODULE;
-            return convertDevice(c, bModule);
+            // set default component address
+            _component = USC_DEFAULT_COMPONENT;
+            return convertDevice(c, bComponent);
         case '/':
             _action = _data + _np;
             return convertDevice(c, bAction);
@@ -471,7 +471,7 @@ namespace usc
 
         return Unexpected;
     }
-    Result Command::parseModule(char c)
+    Result Command::parseComponent(char c)
     {
         // check for overflow
         if (isDigit(c))
@@ -483,14 +483,14 @@ namespace usc
         {
         case '/':
             _action = _data + _np;
-            return convertModule(c, bAction);
+            return convertComponent(c, bAction);
         case '|':
             _bp = _np;
             _data[_np - 1] = 0;
-            return convertModule(c, bCRC);
+            return convertComponent(c, bCRC);
         case '$':
             _data[_np - 1] = 0;
-            return convertModule(c, bBegin, OK);
+            return convertComponent(c, bBegin, OK);
         }
 
         return Unexpected;
@@ -649,8 +649,8 @@ namespace usc
         case bDevice:
             res = parseDevice(c);
             break;
-        case bModule:
-            res = parseModule(c);
+        case bComponent:
+            res = parseComponent(c);
             break;
         case bAction:
             res = parseAction(c);

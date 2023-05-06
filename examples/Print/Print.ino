@@ -17,8 +17,8 @@ void printCommand() {
   Serial.println(cmd.isBroadcast() ? F("YES") : F("NO"));
   Serial.print(F("Device        : "));
   Serial.println(cmd.device());
-  Serial.print(F("Module        : "));
-  Serial.println(cmd.module());
+  Serial.print(F("Component     : "));
+  Serial.println(cmd.component());
   
   if (cmd.hasAction()) {
     Serial.print(F("Action      : "));

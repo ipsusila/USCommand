@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define USC_BROADCAST_ADDR 0
-#define USC_DEFAULT_MODULE 0
+#define USC_BROADCAST_ADDR      0
+#define USC_DEFAULT_COMPONENT   0
 
 #ifndef USC_BUFSIZE
 #define USC_BUFSIZE 128
@@ -16,7 +16,7 @@ namespace usc
     {
         Broadcast = 0x00,
         InvalidDevice = UINT32_MAX,
-        InvalidModule = UINT16_MAX
+        InvalidComponent = UINT16_MAX
     };
 
     enum Result
@@ -91,7 +91,7 @@ namespace usc
         bool hasChecksum(void) const;
         uint8_t checksum(void) const;
         uint32_t device(void) const;
-        uint16_t module(void) const;
+        uint16_t component(void) const;
         bool hasAction(void) const;
         const char *action(void) const;
         char *beginResponse(void);
@@ -103,17 +103,17 @@ namespace usc
         Result parseBegin(char c);
         Result parseEnd(char c);
         Result parseDevice(char c);
-        Result parseModule(char c);
+        Result parseComponent(char c);
         Result parseAction(char c);
         Result parseParamKey(char c);
         Result parseParamValue(char c);
         Result parseCRC(char c);
         Result convertDevice(char c, uint8_t ns, Result res = Next);
-        Result convertModule(char c, uint8_t ns, Result res = Next);
+        Result convertComponent(char c, uint8_t ns, Result res = Next);
 
     private:
         uint32_t _device;
-        uint16_t _module;
+        uint16_t _component;
         uint8_t _state;
         uint8_t _checksum;
         bool _hasChecksum;

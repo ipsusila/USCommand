@@ -46,8 +46,8 @@ int main()
             case usc::OK:
                 printf("Data: %s\n", str.c_str());
                 chk = xorall(cmd.data());
-                printf("'%s' | Device: %d, module: %d -> %d, Par: %d, CHK=%X (%d) <> %X\n", 
-                    cmd.data(), cmd.device(), cmd.module(), cmd.isResponse(), 
+                printf("'%s' | Device: %d, component: %d -> %d, Par: %d, CHK=%X (%d) <> %X\n", 
+                    cmd.data(), cmd.device(), cmd.component(), cmd.isResponse(), 
                     cmd.params().count(), cmd.checksum(), chk, chk);
                 if (cmd.hasAction()) {
                     printf("  Action: `%s`\n", cmd.action());
@@ -70,8 +70,8 @@ int main()
             case usc::Next:
                 break;
             default:
-                printf("'%s' (`%c`) | Err: %d, Device: %d, module: %d, chk: %d\n", 
-                    cmd.data(), ch, (int)res, cmd.device(), cmd.module(), cmd.checksum());
+                printf("'%s' (`%c`) | Err: %d, Device: %d, component: %d, chk: %d\n", 
+                    cmd.data(), ch, (int)res, cmd.device(), cmd.component(), cmd.checksum());
                 cmd.clear();
                 str.clear();
                 break;

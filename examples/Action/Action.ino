@@ -19,8 +19,8 @@ void printCommand() {
   Serial.println(cmd.isBroadcast() ? F("YES") : F("NO"));
   Serial.print(F("Device        : "));
   Serial.println(cmd.device());
-  Serial.print(F("Module        : "));
-  Serial.println(cmd.module());
+  Serial.print(F("Component     : "));
+  Serial.println(cmd.component());
 
   if (cmd.hasAction()) {
     Serial.print(F("Action      : "));
@@ -42,13 +42,13 @@ void handleCommand(bool verbose) {
     return;
   }
 
-  // module
+  // Component
   // 0: print version
   // 1: motor
   // 
   // handle:
   // !11:1/forward?s=10$
-  switch(cmd.module()) {
+  switch(cmd.component()) {
   case 0:
     Serial.println(cmd.beginResponse());
     Serial.println(F("Action v1.0.0"));
@@ -76,8 +76,8 @@ void handleCommand(bool verbose) {
     }
     break;
   default:
-    Serial.print(F("Unknown module:"));
-    Serial.print(cmd.module());
+    Serial.print(F("Unknown component:"));
+    Serial.print(cmd.component());
     break;
   }
 
