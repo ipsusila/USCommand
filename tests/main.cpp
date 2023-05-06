@@ -29,6 +29,7 @@ int main()
     {
         char ch;
         uint8_t chk;
+        std::string str =  "";
         while (file.good())
         {
             ch = 0;
@@ -36,32 +37,35 @@ int main()
             if (ch == 0) {
                 break;
             }
-            
 
             usc::Result res = cmd.parse(ch);
-            //str.push_back(ch);
+            str.push_back(ch);
 
             char *pc;
-            usc::Param *pp;
             switch(res) {
             case usc::OK:
+                printf("Data: %s\n", str.c_str());
                 chk = xorall(cmd.data());
-                printf("'%s' | Device: %d, module: %d -> %d, CHK=%X (%d) <> %X\n", 
-                    cmd.data(), cmd.device(), cmd.module(), cmd.isResponse(), cmd.checksum(), chk, chk);
+                printf("'%s' | Device: %d, module: %d -> %d, Par: %d, CHK=%X (%d) <> %X\n", 
+                    cmd.data(), cmd.device(), cmd.module(), cmd.isResponse(), 
+                    cmd.param().count(), cmd.checksum(), chk, chk);
                 if (cmd.hasDesignation()) {
                     printf("  Designation: `%s`\n", cmd.designation());
                 }
                 while (cmd.nextParam()) {
-                    pp = cmd.param();
-                    if (pp && pp->key()) {
-                        printf("  Param: `%s`", pp->key());
+                    usc::Param &pp = cmd.param();
+                    if (pp.key()) {
+                        printf("  Param (%d): `%s`", pp.count(), pp.key());
                     }
-                    if (pp && pp->hasValue()) {
-                        printf(">`%s`\n", pp->value());
+                    if (pp.hasValue()) {
+                        printf(">`%s`\n", pp.value());
                     }
+                    usc::KeyVal kv = cmd.param().kv();
+                    printf("    KV->%s:%s\n", kv.key(), kv.hasValue() ? kv.value() : "");
                 }
                 printf("\n");
                 cmd.clear();
+                str.clear();
                 break;
             case usc::Next:
                 break;
@@ -69,6 +73,7 @@ int main()
                 printf("'%s' (`%c`) | Err: %d, Device: %d, module: %d, chk: %d\n", 
                     cmd.data(), ch, (int)res, cmd.device(), cmd.module(), cmd.checksum());
                 cmd.clear();
+                str.clear();
                 break;
             }
         }

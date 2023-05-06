@@ -29,6 +29,25 @@ namespace usc
     };
 
     class Command;
+
+    class KeyVal {
+    public:
+        KeyVal(const char *k = nullptr, const char *v = nullptr);
+        KeyVal(const KeyVal &kv);
+        KeyVal &operator=(const KeyVal &kv);
+
+        const char *key() const;
+        const char keyChar() const;
+        const char *value() const;
+        bool hasValue() const;
+        int valueInt(int def = 0) const;
+        long valueLong(long def = 0) const;
+        float valueFloat(float def = 0) const;
+    private:
+        const char *_key;
+        const char *_value;
+    };
+
     class Param
     {
         friend class Command;
@@ -36,23 +55,28 @@ namespace usc
     public:
         Param();
 
+        int count() const;
         bool valid() const;
         bool hasValue() const;
         char *key();
+        char keyChar() const;
         char *value();
         int valueInt(int def = 0) const;
         long valueLong(long def = 0) const;
         float valueFloat(float def = 0) const;
+        KeyVal kv() const;
 
     private:
         char *_key;
         char *_value;
         char *_next;
         char *_end;
+        int _count;
 
         void clear(void);
         bool parse();
     };
+
 
     class Command
     {
@@ -71,10 +95,8 @@ namespace usc
         bool hasDesignation(void) const;
         const char *designation(void) const;
         bool hasParam(void) const;
-        Param *param(void);
+        Param &param(void);
         bool nextParam(void);
-        char *paramKey(void);
-        char paramKeyChar(void) const;
         char *beginResponse(void);
         char *beginResponseCheksum(uint8_t &chk);
         char endResponse(void) const;

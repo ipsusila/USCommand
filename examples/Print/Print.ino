@@ -25,14 +25,13 @@ void printCommand() {
     Serial.println(cmd.designation());
   }
   if (cmd.hasParam()) {
-    usc::Param *p;
     while(cmd.nextParam()) {
-      p = cmd.param();
+      usc::Param &p = cmd.param();
       Serial.print(F("  Param> "));
-      Serial.print(p->key());
-      if (p->hasValue()) {
+      Serial.print(p.key());
+      if (p.hasValue()) {
         Serial.print(':');
-        Serial.print(p->value());
+        Serial.print(p.value());
       }
       Serial.println();
     }

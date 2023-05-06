@@ -110,6 +110,42 @@ static inline char unescape(char c)
 // Begin implementation
 namespace usc
 {
+
+    KeyVal::KeyVal(const char *k, const char *v)
+        : _key(k), _value(v) {
+    }
+    KeyVal::KeyVal(const KeyVal &kv) {
+        _key = kv._key;
+        _value = kv._value;
+    }
+    KeyVal &KeyVal::operator=(const KeyVal &kv) {
+        _key = kv._key;
+        _value = kv._value;
+        return *this;
+    }
+
+    const char *KeyVal::key() const {
+        return _key;
+    }
+    const char KeyVal::keyChar() const {
+        return _key ? *_key : 0;
+    }
+    const char *KeyVal::value() const {
+        return _value;
+    }
+    bool KeyVal::hasValue() const {
+        return _value != nullptr;
+    }
+    int KeyVal::valueInt(int def) const {
+        return _value ? atoi(_value) : def;
+    }
+    long KeyVal::valueLong(long def) const {
+        return _value ? atol(_value) : def;
+    }
+    float KeyVal::valueFloat(float def) const {
+        return _value ? atof(_value) : def;
+    }
+
     Param::Param()
     {
         clear();
@@ -120,6 +156,7 @@ namespace usc
         _value = nullptr;
         _next = nullptr;
         _end = nullptr;
+        _count = 0;
     }
 
     bool Param::parse()
@@ -152,6 +189,10 @@ namespace usc
         return false;
     }
 
+    int Param::count() const {
+        return _count;
+    }
+
     bool Param::valid() const
     {
         return _next != nullptr && _next < _end;
@@ -165,34 +206,29 @@ namespace usc
     {
         return _key;
     }
+    char Param::keyChar() const {
+        return _key ? *_key : 0;
+    }
     char *Param::value()
     {
         return _value;
     }
     int Param::valueInt(int def) const
     {
-        if (_value)
-        {
-            return atoi(_value);
-        }
-        return def;
+        return _value ? atoi(_value) : def;
     }
     long Param::valueLong(long def) const
     {
-        if (_value)
-        {
-            return atol(_value);
-        }
-        return def;
+        return _value ? atol(_value) : def;
     }
     float Param::valueFloat(float def) const
     {
-        if (_value)
-        {
-            return atof(_value);
-        }
-        return def;
+        return _value ? atof(_value) : def;
     }
+    KeyVal Param::kv() const {
+        return KeyVal(_key, _value);
+    }
+
 
     Command::Command()
     {
@@ -213,6 +249,7 @@ namespace usc
         _data[0] = 0;
         _data[1] = 0;
         _designation = nullptr;
+        _param.clear();
     }
 
     uint32_t Command::device(void) const
@@ -286,21 +323,9 @@ namespace usc
     {
         return _param.valid();
     }
-    Param *Command::param()
+    Param &Command::param()
     {
-        return &_param;
-    }
-    char *Command::paramKey()
-    {
-        return _param._key;
-    }
-    char Command::paramKeyChar() const
-    {
-        if (_param._key)
-        {
-            return *(_param._key);
-        }
-        return 0;
+        return _param;
     }
     bool Command::nextParam()
     {
@@ -508,17 +533,20 @@ namespace usc
         case '=':
             _state = bParamValue;
             _data[_np - 1] = PARAM_VAL;
+            _param._count++;
             return Next;
         case '|':
             _state = bCRC;
             _bp = _np;
             _data[_np - 1] = PARAM_END;
             _param._end = &_data[_np];
+            _param._count++;
             return Next;
         case '$':
             _state = bBegin;
             _data[_np - 1] = PARAM_END;
             _param._end = &_data[_np];
+            _param._count++;
             return OK;
         }
         return Unexpected;
