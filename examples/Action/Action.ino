@@ -61,8 +61,10 @@ void handleCommand(bool verbose) {
     }
     if (strcmp_P(cmd.action(), PSTR("forward")) == 0) {
       int step = 0;
-      if (cmd.nextParam() && cmd.param().keyChar() == 's') {
-        step = cmd.param().valueInt();
+
+      cmd.params().begin();
+      if (cmd.params().next() && cmd.params().kv().keyChar() == 's') {
+        step = cmd.params().kv().valueInt();
       }
       Serial.println(cmd.beginResponse());
       Serial.print(F("MOVE FORWARD="));

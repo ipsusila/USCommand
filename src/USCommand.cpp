@@ -124,6 +124,11 @@ namespace usc
         return *this;
     }
 
+    void KeyVal::clear() {
+        _key = nullptr;
+        _value = nullptr;
+    }
+
     const char *KeyVal::key() const {
         return _key;
     }
@@ -146,27 +151,62 @@ namespace usc
         return _value ? atof(_value) : def;
     }
 
-    Param::Param()
-    {
+    Params::Params() {
         clear();
     }
-    void Param::clear()
-    {
-        _key = nullptr;
-        _value = nullptr;
-        _next = nullptr;
+
+    void Params::clear() {
+        _beg = nullptr;
         _end = nullptr;
+        _next = nullptr;
         _count = 0;
+        _pkey = nullptr;
+        _pval = nullptr;
     }
 
-    bool Param::parse()
-    {
+    Params &Params::begin() {
+        _kv.clear();
+        _next = _beg;
+        if (_pkey) {
+            *_pkey = PARAM_KEY;
+        }
+        if (_pval) {
+            *_pval = PARAM_VAL;
+        }
+        _pkey = nullptr;
+        _pval = nullptr;
+
+        return *this;
+    }
+    void Params::begin(char *beg) {
+        _beg = beg;
+        _end = beg;
+        _next = beg;
+        _count = 0;
+    }
+    void Params::add(char *end) {
+        _count++;
+        if (end) {
+            _end = end;
+        }
+    }
+    bool Params::next() {
         if (_next == nullptr || _next >= _end)
         {
             return false;
         }
-        _key = _next;
-        _value = nullptr;
+        _kv._key = _next;
+        _kv._value = nullptr;
+
+        // restore marker
+        if (_pkey) {
+            *_pkey = PARAM_KEY;
+        }
+        if (_pval) {
+            *_pval = PARAM_VAL;
+        }
+        _pkey = nullptr;
+        _pval = nullptr;
 
         char *p = _next;
         while (p != _end)
@@ -175,12 +215,14 @@ namespace usc
             {
             case PARAM_END:
             case PARAM_KEY:
+                _pkey = p;
                 *p = 0;
                 _next = ++p;
                 return true;
             case PARAM_VAL:
-                _key = _next;
-                _value = p + 1;
+                _pval = p;
+                _kv._key = _next;
+                _kv._value = p + 1;
                 *p = 0;
                 break;
             }
@@ -188,47 +230,15 @@ namespace usc
         }
         return false;
     }
-
-    int Param::count() const {
+    const KeyVal &Params::kv() const {
+        return _kv;
+    }
+    int Params::count() const {
         return _count;
     }
-
-    bool Param::valid() const
-    {
-        return _next != nullptr && _next < _end;
+    bool Params::empty() const {
+        return _count == 0;
     }
-
-    bool Param::hasValue() const
-    {
-        return _value != nullptr;
-    }
-    char *Param::key()
-    {
-        return _key;
-    }
-    char Param::keyChar() const {
-        return _key ? *_key : 0;
-    }
-    char *Param::value()
-    {
-        return _value;
-    }
-    int Param::valueInt(int def) const
-    {
-        return _value ? atoi(_value) : def;
-    }
-    long Param::valueLong(long def) const
-    {
-        return _value ? atol(_value) : def;
-    }
-    float Param::valueFloat(float def) const
-    {
-        return _value ? atof(_value) : def;
-    }
-    KeyVal Param::kv() const {
-        return KeyVal(_key, _value);
-    }
-
 
     Command::Command()
     {
@@ -249,7 +259,7 @@ namespace usc
         _data[0] = 0;
         _data[1] = 0;
         _action = nullptr;
-        _param.clear();
+        _params.clear();
     }
 
     uint32_t Command::device(void) const
@@ -319,17 +329,8 @@ namespace usc
         return _action != nullptr && *_action != 0;
     }
 
-    bool Command::hasParam() const
-    {
-        return _param.valid();
-    }
-    Param &Command::param()
-    {
-        return _param;
-    }
-    bool Command::nextParam()
-    {
-        return _param.parse();
+    Params &Command::params() {
+        return _params;
     }
 
     Result Command::convertDevice(char c, uint8_t ns, Result res)
@@ -506,7 +507,7 @@ namespace usc
         {
         case '?':
             _state = bParamKey;
-            _param._next = &_data[_np];
+            _params.begin(_data + _np);
             _data[_np - 1] = 0;
             return Next;
         case '|':
@@ -533,20 +534,18 @@ namespace usc
         case '=':
             _state = bParamValue;
             _data[_np - 1] = PARAM_VAL;
-            _param._count++;
+            _params.add();
             return Next;
         case '|':
             _state = bCRC;
             _bp = _np;
             _data[_np - 1] = PARAM_END;
-            _param._end = &_data[_np];
-            _param._count++;
+            _params.add(_data + _np);
             return Next;
         case '$':
             _state = bBegin;
             _data[_np - 1] = PARAM_END;
-            _param._end = &_data[_np];
-            _param._count++;
+            _params.add(_data + _np);
             return OK;
         }
         return Unexpected;
@@ -563,12 +562,12 @@ namespace usc
             _state = bCRC;
             _bp = _np;
             _data[_np - 1] = PARAM_END;
-            _param._end = &_data[_np];
+            _params._end = _data + _np;
             return Next;
         case '$':
             _state = bBegin;
             _data[_np - 1] = PARAM_END;
-            _param._end = &_data[_np];
+            _params._end = _data + _np;
             return OK;
         }
         return Next;

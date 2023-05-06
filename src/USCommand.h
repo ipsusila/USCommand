@@ -29,13 +29,16 @@ namespace usc
     };
 
     class Command;
+    class Params;
 
     class KeyVal {
+        friend class Params;
     public:
         KeyVal(const char *k = nullptr, const char *v = nullptr);
         KeyVal(const KeyVal &kv);
         KeyVal &operator=(const KeyVal &kv);
 
+        void clear();
         const char *key() const;
         const char keyChar() const;
         const char *value() const;
@@ -48,33 +51,30 @@ namespace usc
         const char *_value;
     };
 
-    class Param
+    class Params
     {
         friend class Command;
-
     public:
-        Param();
+        Params();
 
+        Params &begin();
+        bool next();
+        const KeyVal &kv() const;
         int count() const;
-        bool valid() const;
-        bool hasValue() const;
-        char *key();
-        char keyChar() const;
-        char *value();
-        int valueInt(int def = 0) const;
-        long valueLong(long def = 0) const;
-        float valueFloat(float def = 0) const;
-        KeyVal kv() const;
+        bool empty() const;
 
     private:
-        char *_key;
-        char *_value;
-        char *_next;
+        char *_beg;
         char *_end;
+        char *_next;
         int _count;
+        char *_pkey;
+        char *_pval;
+        KeyVal _kv;
 
-        void clear(void);
-        bool parse();
+        void clear();
+        void begin(char *beg);
+        void add(char *end=nullptr);
     };
 
 
@@ -94,12 +94,10 @@ namespace usc
         uint16_t module(void) const;
         bool hasAction(void) const;
         const char *action(void) const;
-        bool hasParam(void) const;
-        Param &param(void);
-        bool nextParam(void);
         char *beginResponse(void);
         char *beginResponseCheksum(uint8_t &chk);
         char endResponse(void) const;
+        Params &params(void);
 
     protected:
         Result parseBegin(char c);
@@ -119,7 +117,7 @@ namespace usc
         uint8_t _state;
         uint8_t _checksum;
         bool _hasChecksum;
-        Param _param;
+        Params _params;
 
         char _pc;
         int _np, _bp;

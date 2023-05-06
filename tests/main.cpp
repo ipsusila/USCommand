@@ -48,21 +48,21 @@ int main()
                 chk = xorall(cmd.data());
                 printf("'%s' | Device: %d, module: %d -> %d, Par: %d, CHK=%X (%d) <> %X\n", 
                     cmd.data(), cmd.device(), cmd.module(), cmd.isResponse(), 
-                    cmd.param().count(), cmd.checksum(), chk, chk);
+                    cmd.params().count(), cmd.checksum(), chk, chk);
                 if (cmd.hasAction()) {
                     printf("  Action: `%s`\n", cmd.action());
                 }
-                while (cmd.nextParam()) {
-                    usc::Param &pp = cmd.param();
-                    if (pp.key()) {
-                        printf("  Param (%d): `%s`", pp.count(), pp.key());
+
+                for (int i = 0; i < 2; i++)
+                {
+                    usc::Params &par = cmd.params().begin();
+                    while(par.next()) {
+                        const char * val = par.kv().hasValue() ? par.kv().value() : "";
+                        printf("  Pars[%d]  (%d): `%s` > `%s`\n", i, par.count(), par.kv().key(), val);
                     }
-                    if (pp.hasValue()) {
-                        printf(">`%s`\n", pp.value());
-                    }
-                    usc::KeyVal kv = cmd.param().kv();
-                    printf("    KV->%s:%s\n", kv.key(), kv.hasValue() ? kv.value() : "");
+                    par.begin();
                 }
+
                 printf("\n");
                 cmd.clear();
                 str.clear();

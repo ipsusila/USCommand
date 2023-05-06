@@ -24,18 +24,19 @@ void printCommand() {
     Serial.print(F("Action      : "));
     Serial.println(cmd.action());
   }
-  if (cmd.hasParam()) {
-    while(cmd.nextParam()) {
-      usc::Param &p = cmd.param();
-      Serial.print(F("  Param> "));
-      Serial.print(p.key());
-      if (p.hasValue()) {
-        Serial.print(':');
-        Serial.print(p.value());
-      }
-      Serial.println();
+
+  usc::Params &par = cmd.params().begin();
+  while(par.next()) {
+    const usc::KeyVal &kv = par.kv();
+    Serial.print(F("  Param> "));
+    Serial.print(kv.key());
+    if (kv.hasValue()) {
+      Serial.print(':');
+      Serial.print(kv.value());
     }
+    Serial.println();
   }
+  
   Serial.println("Response:");
   Serial.println(cmd.beginResponse());
   Serial.print(F("<<\nANY DATA\n"));
