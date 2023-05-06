@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define USC_BROADCAST_ADDR      0
-#define USC_DEFAULT_COMPONENT   0
+#define USC_BROADCAST_ADDR 0
+#define USC_DEFAULT_COMPONENT 0
 
 #ifndef USC_BUFSIZE
 #define USC_BUFSIZE 128
@@ -31,8 +31,10 @@ namespace usc
     class Command;
     class Params;
 
-    class KeyVal {
+    class KeyVal
+    {
         friend class Params;
+
     public:
         KeyVal(const char *k = nullptr, const char *v = nullptr);
         KeyVal(const KeyVal &kv);
@@ -46,6 +48,7 @@ namespace usc
         int valueInt(int def = 0) const;
         long valueLong(long def = 0) const;
         float valueFloat(float def = 0) const;
+
     private:
         const char *_key;
         const char *_value;
@@ -54,6 +57,7 @@ namespace usc
     class Params
     {
         friend class Command;
+
     public:
         Params();
 
@@ -74,9 +78,8 @@ namespace usc
 
         void clear();
         void begin(char *beg);
-        void add(char *end=nullptr);
+        void add(char *end = nullptr);
     };
-
 
     class Command
     {
