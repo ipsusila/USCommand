@@ -84,14 +84,14 @@ namespace usc
         Command();
 
         Result parse(char c);
-        uint32_t device(void) const;
-        uint16_t module(void) const;
         bool isBroadcast(void) const;
         bool isResponse(void) const;
         void clear(void);
         char *data(char prefix = 0);
         bool hasChecksum(void) const;
         uint8_t checksum(void) const;
+        uint32_t device(void) const;
+        uint16_t module(void) const;
         bool hasAction(void) const;
         const char *action(void) const;
         bool hasParam(void) const;
