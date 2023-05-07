@@ -20,6 +20,7 @@ enum
 {
     bBegin,
     bEnd,
+    bError,
     bDevice,
     bComponent,
     bAction,
@@ -110,6 +111,7 @@ static inline char unescape(char c)
 // Begin implementation
 namespace usc
 {
+    const char * Empty = "";
 
     KeyVal::KeyVal(const char *k, const char *v)
         : _key(k), _value(v)
@@ -267,6 +269,9 @@ namespace usc
 
     Command::Command()
     {
+        cmdCb = nullptr;
+        errCb = nullptr;
+        _devCb = 0;
         clear();
     }
 
@@ -346,7 +351,7 @@ namespace usc
 
     const char *Command::action(void) const
     {
-        return _action;
+        return _action ? _action : Empty;
     }
 
     bool Command::hasAction() const
@@ -357,6 +362,12 @@ namespace usc
     Params &Command::params()
     {
         return _params;
+    }
+
+    void Command::registerCallback(uint32_t dev, CommandCb fnCmd, ErrorCb fnErr) {
+        this->cmdCb = fnCmd;
+        this->errCb = fnErr;
+        this->_devCb = dev;
     }
 
     Result Command::convertDevice(char c, uint8_t ns, Result res)
@@ -427,11 +438,6 @@ namespace usc
             _data[_np++] = c;
             _data[_np] = 0;
             return Next;
-        default:
-            if (isEmpty(c))
-            {
-                return Next;
-            }
         }
 
         return Unexpected;
@@ -621,8 +627,15 @@ namespace usc
         return Unexpected;
     }
 
-    Result Command::parse(char c)
+    Result Command::doProcess(char c)
     {
+        if (_state == bBegin) {
+            if (isEmpty(c)) {
+                return Next;
+            } else if (c == '!' || c == '@') {
+                clear();
+            }
+        }
         if (_capture)
         {
             if (_state != bCRC && _state != bEnd)
@@ -698,6 +711,35 @@ namespace usc
         // save character as previous
         _pc = c;
 
+        return res;
+    }
+
+    Result Command::process(char c) {
+        if (_state == bError) {
+            clear();
+        }
+
+        bool call;
+        Result res = doProcess(c);
+        switch (res) {
+        case OK:
+            // match address
+            call = !isResponse() && (isBroadcast() || _device == _devCb) && cmdCb;
+            if (call) {
+                _params.begin();
+                cmdCb(isBroadcast(), _component, action(), _params);
+            }
+            break;
+        case Next:
+            break;
+        default:
+            if (errCb) {
+                _params.begin();
+                errCb(res, *this);
+            }
+            _state = bError;
+            break;
+        }
         return res;
     }
 }

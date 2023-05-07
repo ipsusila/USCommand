@@ -31,6 +31,10 @@ namespace usc
     class Command;
     class Params;
 
+    // callback type
+    typedef void (*CommandCb)(bool, uint16_t, const char *, Params &);
+    typedef void (*ErrorCb)(Result, Command &);
+
     class KeyVal
     {
         friend class Params;
@@ -86,7 +90,7 @@ namespace usc
     public:
         Command();
 
-        Result parse(char c);
+        Result process(char c);
         bool isBroadcast(void) const;
         bool isResponse(void) const;
         void clear(void);
@@ -101,6 +105,7 @@ namespace usc
         char *beginResponseCheksum(uint8_t &chk);
         char endResponse(void) const;
         Params &params(void);
+        void registerCallback(uint32_t dev, CommandCb fnCmd = nullptr, ErrorCb fnErr = nullptr);
 
     protected:
         Result parseBegin(char c);
@@ -113,6 +118,7 @@ namespace usc
         Result parseCRC(char c);
         Result convertDevice(char c, uint8_t ns, Result res = Next);
         Result convertComponent(char c, uint8_t ns, Result res = Next);
+        Result doProcess(char c);
 
     private:
         uint32_t _device;
@@ -129,6 +135,10 @@ namespace usc
 
         char *_action;
         char _data[USC_BUFSIZE + 1];
+
+        uint32_t _devCb;
+        ErrorCb errCb;
+        CommandCb cmdCb;
     };
 };
 

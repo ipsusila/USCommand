@@ -6,12 +6,11 @@
 #define DEVICE 11
 usc::Command cmd;
 
-void printErrorThenClear(int res, char ch) {
+void printError(int res, char ch) {
   Serial.println();
   Serial.print("Error:");
   Serial.print(res);
   Serial.println(ch);
-  cmd.clear();
 }
 
 void printCommand() {
@@ -27,8 +26,8 @@ void printCommand() {
     Serial.println(cmd.action());
   }
 
-  // Note: do not iterate param, since it's one time operation
-  // it overwrite buffer content, and it's not reversible (rewindable)
+
+  
 }
 
 void handleCommand(bool verbose) {
@@ -80,28 +79,25 @@ void handleCommand(bool verbose) {
     Serial.print(cmd.component());
     break;
   }
-
-  cmd.clear();
 }
 
 void cmdLoop() {
   usc::Result res;
   int ch = Serial.read();
   while (ch != -1) {
-    res = cmd.parse(ch);
+    res = cmd.process(ch);
     switch (res) {
       case usc::OK:
         if (cmd.isResponse()) {
           Serial.println(F("Retrive response data"));
         } else {
           handleCommand(true);
-          cmd.clear();
         }
         break;
       case usc::Next:
         break;
       default:
-        printErrorThenClear(res, ch);
+        printError(res, ch);
         break;
     }
     ch = Serial.read();
@@ -110,7 +106,6 @@ void cmdLoop() {
 
 void setup() {
   Serial.begin(9600);
-  cmd.clear();
 
   Serial.println(F("Print USCommand contents"));
 }

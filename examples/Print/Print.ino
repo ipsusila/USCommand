@@ -49,7 +49,7 @@ void loop() {
     int ch = Serial.read();
     while (ch != -1) {
       Serial.print((char)ch);
-      res = cmd.parse(ch);
+      res = cmd.process(ch);
       switch(res) {
       case usc::OK:
         if (cmd.isResponse()) {
@@ -57,7 +57,6 @@ void loop() {
         } else {
           Serial.println();
           printCommand();
-          cmd.clear();
         }
         break;
       case usc::Next:
@@ -67,7 +66,6 @@ void loop() {
         Serial.print("Error:");
         Serial.print((int)res);
         Serial.println((char)ch);
-        cmd.clear();
         break;
       }
 

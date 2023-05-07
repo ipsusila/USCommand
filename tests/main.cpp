@@ -19,10 +19,47 @@ uint8_t xorall(const char *data)
     return chk;
 }
 
-int main()
-{
+std::string line;
+void onCommand(bool bcast, uint16_t comp, const char *action, usc::Params &par) {
+    printf("LINE: |\n%s\n|\n", line.c_str());
+    printf("[CMD] bcast: %d, com: %d, action: %s, pars: %d\n", bcast, comp, action, par.count());
+    line.clear();
+}
+
+void onError(usc::Result res, usc::Command &c) {
+    printf("LINE: |\n%s\n|\n", line.c_str());
+    printf("[ERR] err: %d, bcast: %d, com: %d, action: %s, pars: %d\n", 
+        res, c.isBroadcast(), c.component(), c.action(), c.params().count());
+    line.clear();
+}
+
+void testCallback() {
     usc::Command cmd;
-    cmd.clear();
+    cmd.registerCallback(18, onCommand, onError);
+
+    std::ifstream file("input.txt");
+    if (file.is_open())
+    {
+        char ch;
+        uint8_t chk;
+        std::string str = "";
+        while (file.good())
+        {
+            ch = 0;
+            file.get(ch);
+            if (ch == 0)
+            {
+                break;
+            }
+            line.push_back(ch);
+            cmd.process(ch);
+        }
+        file.close();
+    }
+}
+
+void testParse() {
+    usc::Command cmd;
 
     const char *test = "!0.0.2.3:123|AA$";
     printf("Checksum: %s -> %X\n", test, xorall(test));
@@ -42,7 +79,7 @@ int main()
                 break;
             }
 
-            usc::Result res = cmd.parse(ch);
+            usc::Result res = cmd.process(ch);
             str.push_back(ch);
 
             char *pc;
@@ -71,7 +108,6 @@ int main()
                 }
 
                 printf("\n");
-                cmd.clear();
                 str.clear();
                 break;
             case usc::Next:
@@ -79,13 +115,18 @@ int main()
             default:
                 printf("'%s' (`%c`) | Err: %d, Device: %d, component: %d, chk: %d\n",
                        cmd.data(), ch, (int)res, cmd.device(), cmd.component(), cmd.checksum());
-                cmd.clear();
                 str.clear();
                 break;
             }
         }
         file.close();
     }
+}
 
+int main()
+{
+    testCallback();
+    printf("\n==========\n");
+    testParse();
     return 0;
 }
