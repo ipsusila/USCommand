@@ -44,7 +44,6 @@ namespace usc
         KeyVal(const KeyVal &kv);
         KeyVal &operator=(const KeyVal &kv);
 
-        void clear();
         const char *key() const;
         const char keyChar() const;
         const char *value() const;
@@ -56,6 +55,8 @@ namespace usc
     private:
         const char *_key;
         const char *_value;
+
+        void clear();
     };
 
     class Params
