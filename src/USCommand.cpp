@@ -18,15 +18,15 @@
 
 enum
 {
-    bBegin,
-    bEnd,
-    bError,
-    bDevice,
-    bComponent,
-    bAction,
-    bParamKey,
-    bParamValue,
-    bCRC
+    sBegin,
+    sEnd,
+    sError,
+    sDevice,
+    sComponent,
+    sAction,
+    sParamKey,
+    sParamValue,
+    sChecksum
 };
 
 static inline int toInt(char *pb, char *pe)
@@ -267,11 +267,11 @@ namespace usc
         return _count == 0;
     }
 
-    Command::Command()
+    Command::Command(uint32_t dev)
     {
         cmdCb = nullptr;
         errCb = nullptr;
-        _devCb = 0;
+        _devAddr = dev;
         clear();
     }
 
@@ -280,7 +280,7 @@ namespace usc
         _pc = '\0';
         _np = 0;
         _ni = 0;
-        _state = bBegin;
+        _state = sBegin;
         _device = InvalidDevice;
         _component = 0;
         _capture = false;
@@ -295,6 +295,13 @@ namespace usc
     uint32_t Command::device(void) const
     {
         return _device;
+    }
+    void Command::changeDeviceAddress(uint32_t addr) 
+    {
+        _devAddr = addr;
+    }
+    uint32_t Command::deviceAddress() const {
+        return _devAddr;
     }
 
     uint16_t Command::component(void) const
@@ -364,10 +371,9 @@ namespace usc
         return _params;
     }
 
-    void Command::registerCallback(uint32_t dev, CommandCb fnCmd, ErrorCb fnErr) {
+    void Command::attachCallback(CommandCb fnCmd, ErrorCb fnErr) {
         this->cmdCb = fnCmd;
         this->errCb = fnErr;
-        this->_devCb = dev;
     }
 
     Result Command::convertDevice(char c, uint8_t ns, Result res)
@@ -419,12 +425,12 @@ namespace usc
         return res;
     }
 
-    Result Command::parseBegin(char c)
+    Result Command::processBegin(char c)
     {
         switch (c)
         {
         case '!':
-            _state = bDevice;
+            _state = sDevice;
             _np = 0;
             _bp = 1;
             _ni = 0;
@@ -433,7 +439,7 @@ namespace usc
             _checksum ^= (uint8_t)c;
             return Next;
         case '@':
-            _state = bEnd;
+            _state = sEnd;
             _np = 0;
             _data[_np++] = c;
             _data[_np] = 0;
@@ -442,7 +448,7 @@ namespace usc
 
         return Unexpected;
     }
-    Result Command::parseEnd(char c)
+    Result Command::processEnd(char c)
     {
         if (_pc == '\\')
         {
@@ -463,7 +469,7 @@ namespace usc
         }
         else if (c == '$')
         {
-            _state = bBegin;
+            _state = sBegin;
             _capture = false;
             return OK;
         }
@@ -471,7 +477,7 @@ namespace usc
         return Next;
     }
 
-    Result Command::parseDevice(char c)
+    Result Command::processDevice(char c)
     {
         // wait terminated
         if (isDigit(c))
@@ -484,26 +490,26 @@ namespace usc
         case '-':
         case '_':
         case '.':
-            return convertDevice(c, bDevice);
+            return convertDevice(c, sDevice);
         case ':':
             // set default component address
             _component = USC_DEFAULT_COMPONENT;
-            return convertDevice(c, bComponent);
+            return convertDevice(c, sComponent);
         case '/':
             _action = _data + _np;
-            return convertDevice(c, bAction);
+            return convertDevice(c, sAction);
         case '|':
             _bp = _np;
             _data[_np - 1] = 0;
-            return convertDevice(c, bCRC);
+            return convertDevice(c, sChecksum);
         case '$':
             _data[_np - 1] = 0;
-            return convertDevice(c, bBegin, OK);
+            return convertDevice(c, sBegin, OK);
         }
 
         return Unexpected;
     }
-    Result Command::parseComponent(char c)
+    Result Command::processComponent(char c)
     {
         // check for overflow
         if (isDigit(c))
@@ -515,19 +521,19 @@ namespace usc
         {
         case '/':
             _action = _data + _np;
-            return convertComponent(c, bAction);
+            return convertComponent(c, sAction);
         case '|':
             _bp = _np;
             _data[_np - 1] = 0;
-            return convertComponent(c, bCRC);
+            return convertComponent(c, sChecksum);
         case '$':
             _data[_np - 1] = 0;
-            return convertComponent(c, bBegin, OK);
+            return convertComponent(c, sBegin, OK);
         }
 
         return Unexpected;
     }
-    Result Command::parseAction(char c)
+    Result Command::processAction(char c)
     {
         // Check if c is valid
         if (isValidKey(c) || (c == '/' && _pc != '/'))
@@ -538,23 +544,23 @@ namespace usc
         switch (c)
         {
         case '?':
-            _state = bParamKey;
+            _state = sParamKey;
             _params.begin(_data + _np);
             _data[_np - 1] = 0;
             return Next;
         case '|':
-            _state = bCRC;
+            _state = sChecksum;
             _bp = _np;
             _data[_np - 1] = 0;
             return Next;
         case '$':
-            _state = bBegin;
+            _state = sBegin;
             _data[_np - 1] = 0;
             return OK;
         }
         return Unexpected;
     }
-    Result Command::parseParamKey(char c)
+    Result Command::processParamKey(char c)
     {
         // Check if c is valid
         if (isValidKey(c))
@@ -564,47 +570,47 @@ namespace usc
         switch (c)
         {
         case '=':
-            _state = bParamValue;
+            _state = sParamValue;
             _data[_np - 1] = PARAM_VAL;
             _params.add();
             return Next;
         case '|':
-            _state = bCRC;
+            _state = sChecksum;
             _bp = _np;
             _data[_np - 1] = PARAM_END;
             _params.add(_data + _np);
             return Next;
         case '$':
-            _state = bBegin;
+            _state = sBegin;
             _data[_np - 1] = PARAM_END;
             _params.add(_data + _np);
             return OK;
         }
         return Unexpected;
     }
-    Result Command::parseParamValue(char c)
+    Result Command::processParamValue(char c)
     {
         switch (c)
         {
         case '&':
-            _state = bParamKey;
+            _state = sParamKey;
             _data[_np - 1] = PARAM_KEY;
             return Next;
         case '|':
-            _state = bCRC;
+            _state = sChecksum;
             _bp = _np;
             _data[_np - 1] = PARAM_END;
             _params._end = _data + _np;
             return Next;
         case '$':
-            _state = bBegin;
+            _state = sBegin;
             _data[_np - 1] = PARAM_END;
             _params._end = _data + _np;
             return OK;
         }
         return Next;
     }
-    Result Command::parseCRC(char c)
+    Result Command::processChecksum(char c)
     {
         // TODO: efficient calculation method
         if (isDigit(c))
@@ -613,7 +619,7 @@ namespace usc
         }
         else if (c == '$')
         {
-            _state = bBegin;
+            _state = sBegin;
             _hasChecksum = true;
 
             // compare checksum
@@ -629,7 +635,7 @@ namespace usc
 
     Result Command::doProcess(char c)
     {
-        if (_state == bBegin) {
+        if (_state == sBegin) {
             if (isEmpty(c)) {
                 return Next;
             } else if (c == '!' || c == '@') {
@@ -638,7 +644,7 @@ namespace usc
         }
         if (_capture)
         {
-            if (_state != bCRC && _state != bEnd)
+            if (_state != sChecksum && _state != sEnd)
             {
                 _checksum ^= (uint8_t)c;
             }
@@ -649,7 +655,7 @@ namespace usc
             }
             else if (_pc == '\\')
             {
-                if (_state != bParamValue)
+                if (_state != sParamValue)
                 {
                     // escape char only allowed in param value
                     return Unexpected;
@@ -679,29 +685,29 @@ namespace usc
         Result res;
         switch (_state)
         {
-        case bBegin:
-            res = parseBegin(c);
+        case sBegin:
+            res = processBegin(c);
             break;
-        case bEnd:
-            res = parseEnd(c);
+        case sEnd:
+            res = processEnd(c);
             break;
-        case bDevice:
-            res = parseDevice(c);
+        case sDevice:
+            res = processDevice(c);
             break;
-        case bComponent:
-            res = parseComponent(c);
+        case sComponent:
+            res = processComponent(c);
             break;
-        case bAction:
-            res = parseAction(c);
+        case sAction:
+            res = processAction(c);
             break;
-        case bParamKey:
-            res = parseParamKey(c);
+        case sParamKey:
+            res = processParamKey(c);
             break;
-        case bParamValue:
-            res = parseParamValue(c);
+        case sParamValue:
+            res = processParamValue(c);
             break;
-        case bCRC:
-            res = parseCRC(c);
+        case sChecksum:
+            res = processChecksum(c);
             break;
         default:
             res = Unexpected;
@@ -715,7 +721,7 @@ namespace usc
     }
 
     Result Command::process(char c) {
-        if (_state == bError) {
+        if (_state == sError) {
             clear();
         }
 
@@ -724,7 +730,7 @@ namespace usc
         switch (res) {
         case OK:
             // match address
-            call = !isResponse() && (isBroadcast() || _device == _devCb) && cmdCb;
+            call = !isResponse() && (isBroadcast() || _device == _devAddr) && cmdCb;
             if (call) {
                 _params.begin();
                 cmdCb(isBroadcast(), _component, action(), _params);
@@ -737,7 +743,7 @@ namespace usc
                 _params.begin();
                 errCb(res, *this);
             }
-            _state = bError;
+            _state = sError;
             break;
         }
         return res;

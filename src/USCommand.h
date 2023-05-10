@@ -88,7 +88,7 @@ namespace usc
     class Command
     {
     public:
-        Command();
+        Command(uint32_t addr = 0);
 
         Result process(char c);
         bool isBroadcast(void) const;
@@ -105,17 +105,19 @@ namespace usc
         char *beginResponseCheksum(uint8_t &chk);
         char endResponse(void) const;
         Params &params(void);
-        void registerCallback(uint32_t dev, CommandCb fnCmd = nullptr, ErrorCb fnErr = nullptr);
+        void attachCallback(CommandCb fnCmd = nullptr, ErrorCb fnErr = nullptr);
+        void changeDeviceAddress(uint32_t addr);
+        uint32_t deviceAddress() const;
 
     protected:
-        Result parseBegin(char c);
-        Result parseEnd(char c);
-        Result parseDevice(char c);
-        Result parseComponent(char c);
-        Result parseAction(char c);
-        Result parseParamKey(char c);
-        Result parseParamValue(char c);
-        Result parseCRC(char c);
+        Result processBegin(char c);
+        Result processEnd(char c);
+        Result processDevice(char c);
+        Result processComponent(char c);
+        Result processAction(char c);
+        Result processParamKey(char c);
+        Result processParamValue(char c);
+        Result processChecksum(char c);
         Result convertDevice(char c, uint8_t ns, Result res = Next);
         Result convertComponent(char c, uint8_t ns, Result res = Next);
         Result doProcess(char c);
@@ -136,7 +138,7 @@ namespace usc
         char *_action;
         char _data[USC_BUFSIZE + 1];
 
-        uint32_t _devCb;
+        uint32_t _devAddr;
         ErrorCb errCb;
         CommandCb cmdCb;
     };

@@ -34,8 +34,8 @@ void onError(usc::Result res, usc::Command &c) {
 }
 
 void testCallback() {
-    usc::Command cmd;
-    cmd.registerCallback(18, onCommand, onError);
+    usc::Command cmd(18);
+    cmd.attachCallback(onCommand, onError);
 
     std::ifstream file("input.txt");
     if (file.is_open())
