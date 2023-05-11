@@ -147,6 +147,9 @@ namespace usc
     {
         return _value;
     }
+    const char *KeyVal::safeValue() const {
+        return _value ? _value : Empty;
+    }
     bool KeyVal::hasValue() const
     {
         return _value != nullptr;

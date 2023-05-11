@@ -47,6 +47,7 @@ namespace usc
         const char *key() const;
         const char keyChar() const;
         const char *value() const;
+        const char *safeValue() const;
         bool hasValue() const;
         int valueInt(int def = 0) const;
         long valueLong(long def = 0) const;
