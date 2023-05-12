@@ -28,6 +28,14 @@ namespace usc
         Overflow
     };
 
+    enum Base
+    {
+        Bin = 2,
+        Octal = 8,
+        Decimal = 10,
+        Hex = 16
+    };
+
     class Command;
     class Params;
 
@@ -52,6 +60,8 @@ namespace usc
         int valueInt(int def = 0) const;
         long valueLong(long def = 0) const;
         float valueFloat(float def = 0) const;
+        int valueInt(Base base, int def = 0) const;
+        long valueLong(Base base, long def = 0) const;
         int limitInt(int min, int max, int def = 0) const;
         long limitLong(long min, long max, long def = 0) const;
         float limitFloat(float min, float max, float def = 0) const;

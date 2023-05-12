@@ -166,6 +166,12 @@ namespace usc
     {
         return _value ? atof(_value) : def;
     }
+    int KeyVal::valueInt(Base base, int def) const {
+        return _value ? (int)strtol(_value, NULL, (int)base) : def;
+    }
+    long KeyVal::valueLong(Base base, long def) const {
+        return _value ? strtol(_value, NULL, (int)base) : def;
+    }
 
     int KeyVal::limitInt(int min, int max, int def) const {
         int val = _value ? atoi(_value) : def;
