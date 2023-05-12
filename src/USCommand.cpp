@@ -200,33 +200,43 @@ namespace usc
         return n;
     }
 
+    uint8_t KeyVal::limitByte(uint8_t min, uint8_t max, uint8_t def) const {
+        int val = _value ? atoi(_value) : def;
+        if (val < (int)min) {
+            return min;
+        } else if (val > (int)max) {
+            return max;
+        }
+        return (uint8_t)val;
+    }
+
     int KeyVal::limitInt(int min, int max, int def) const {
         int val = _value ? atoi(_value) : def;
         if (val < min) {
-            val = min;
+            return min;
         }
         if (val > max) {
-            val = max;
+            return max;
         }
         return val;
     }
     long KeyVal::limitLong(long min, long max, long def) const {
         long val = _value ? atol(_value) : def;
         if (val < min) {
-            val = min;
+            return min;
         }
         if (val > max) {
-            val = max;
+            return max;
         }
         return val;
     }
     float KeyVal::limitFloat(float min, float max, float def) const {
         float val = _value ? atof(_value) : def;
         if (val < min) {
-            val = min;
+            return min;
         }
         if (val > max) {
-            val = max;
+            return max;
         }
         return val;
     }

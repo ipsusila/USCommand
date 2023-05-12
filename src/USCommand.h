@@ -62,6 +62,7 @@ namespace usc
         float valueFloat(float def = 0) const;
         int valueInt(Base base, int def = 0) const;
         long valueLong(Base base, long def = 0) const;
+        uint8_t limitByte(uint8_t min = 0, uint8_t max = 255, uint8_t def = 0) const;
         int limitInt(int min, int max, int def = 0) const;
         long limitLong(long min, long max, long def = 0) const;
         float limitFloat(float min, float max, float def = 0) const;
