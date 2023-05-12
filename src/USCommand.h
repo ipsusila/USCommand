@@ -28,14 +28,6 @@ namespace usc
         Overflow
     };
 
-    enum Base
-    {
-        Bin = 2,
-        Octal = 8,
-        Decimal = 10,
-        Hex = 16
-    };
-
     class Command;
     class Params;
 
@@ -60,11 +52,11 @@ namespace usc
         int valueInt(int def = 0) const;
         long valueLong(long def = 0) const;
         float valueFloat(float def = 0) const;
-        int valueInt(Base base, int def = 0) const;
-        long valueLong(Base base, long def = 0) const;
-        uint8_t limitByte(uint8_t min = 0, uint8_t max = 255, uint8_t def = 0) const;
-        int limitInt(int min, int max, int def = 0) const;
-        long limitLong(long min, long max, long def = 0) const;
+        int valueInt(int def, int base) const;
+        long valueLong(long def, int base) const;
+        uint8_t limitByte(uint8_t min = 0, uint8_t max = 255, uint8_t def = 0, int base = 10) const;
+        int limitInt(int min, int max, int def = 0, int base = 10) const;
+        long limitLong(long min, long max, long def = 0, int base = 10) const;
         float limitFloat(float min, float max, float def = 0) const;
         bool copy(char *dest, int n) const;
         int copyn(char *dest, int n) const;

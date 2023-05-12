@@ -167,11 +167,11 @@ namespace usc
     {
         return _value ? atof(_value) : def;
     }
-    int KeyVal::valueInt(Base base, int def) const {
-        return _value ? (int)strtol(_value, NULL, (int)base) : def;
+    int KeyVal::valueInt(int def, int base) const {
+        return _value ? (int)strtol(_value, NULL, base) : def;
     }
-    long KeyVal::valueLong(Base base, long def) const {
-        return _value ? strtol(_value, NULL, (int)base) : def;
+    long KeyVal::valueLong(long def, int base) const {
+        return _value ? strtol(_value, NULL, base) : def;
     }
     bool KeyVal::copy(char *dest, int n) const {
         if (!_value || strlen(_value) < n) {
@@ -200,28 +200,28 @@ namespace usc
         return n;
     }
 
-    uint8_t KeyVal::limitByte(uint8_t min, uint8_t max, uint8_t def) const {
-        int val = _value ? atoi(_value) : def;
-        if (val < (int)min) {
+    uint8_t KeyVal::limitByte(uint8_t min, uint8_t max, uint8_t def, int base) const {
+        long val = _value ? strtol(_value, NULL, base) : def;
+        if (val < (long)min) {
             return min;
-        } else if (val > (int)max) {
+        } else if (val > (long)max) {
             return max;
         }
         return (uint8_t)val;
     }
 
-    int KeyVal::limitInt(int min, int max, int def) const {
-        int val = _value ? atoi(_value) : def;
-        if (val < min) {
+    int KeyVal::limitInt(int min, int max, int def, int base) const {
+        long val = _value ? strtol(_value, NULL, base) : def;
+        if (val < (long)min) {
             return min;
         }
-        if (val > max) {
+        if (val > (long)max) {
             return max;
         }
         return val;
     }
-    long KeyVal::limitLong(long min, long max, long def) const {
-        long val = _value ? atol(_value) : def;
+    long KeyVal::limitLong(long min, long max, long def, int base) const {
+        long val = _value ? strtol(_value, NULL, base) : def;
         if (val < min) {
             return min;
         }
