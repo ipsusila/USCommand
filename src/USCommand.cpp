@@ -200,7 +200,7 @@ namespace usc
         return n;
     }
 
-    uint8_t KeyVal::limitByte(uint8_t min, uint8_t max, uint8_t def, int base) const {
+    uint8_t KeyVal::valueByte(uint8_t min, uint8_t max, uint8_t def, int base) const {
         long val = _value ? strtol(_value, NULL, base) : def;
         if (val < (long)min) {
             return min;
@@ -210,7 +210,7 @@ namespace usc
         return (uint8_t)val;
     }
 
-    int KeyVal::limitInt(int min, int max, int def, int base) const {
+    int KeyVal::valueInt(int min, int max, int def, int base) const {
         long val = _value ? strtol(_value, NULL, base) : def;
         if (val < (long)min) {
             return min;
@@ -220,7 +220,7 @@ namespace usc
         }
         return val;
     }
-    long KeyVal::limitLong(long min, long max, long def, int base) const {
+    long KeyVal::valueLong(long min, long max, long def, int base) const {
         long val = _value ? strtol(_value, NULL, base) : def;
         if (val < min) {
             return min;
@@ -230,7 +230,7 @@ namespace usc
         }
         return val;
     }
-    float KeyVal::limitFloat(float min, float max, float def) const {
+    float KeyVal::valueFloat(float min, float max, float def) const {
         float val = _value ? atof(_value) : def;
         if (val < min) {
             return min;

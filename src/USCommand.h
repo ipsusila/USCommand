@@ -54,10 +54,10 @@ namespace usc
         float valueFloat(float def = 0) const;
         int valueInt(int def, int base) const;
         long valueLong(long def, int base) const;
-        uint8_t limitByte(uint8_t min = 0, uint8_t max = 255, uint8_t def = 0, int base = 10) const;
-        int limitInt(int min, int max, int def = 0, int base = 10) const;
-        long limitLong(long min, long max, long def = 0, int base = 10) const;
-        float limitFloat(float min, float max, float def = 0) const;
+        uint8_t valueByte(uint8_t min = 0, uint8_t max = 255, uint8_t def = 0, int base = 10) const;
+        int valueInt(int min, int max, int def = 0, int base = 10) const;
+        long valueLong(long min, long max, long def = 0, int base = 10) const;
+        float valueFloat(float min, float max, float def = 0) const;
         bool copy(char *dest, int n) const;
         int copyn(char *dest, int n) const;
 
