@@ -52,6 +52,9 @@ namespace usc
         int valueInt(int def = 0) const;
         long valueLong(long def = 0) const;
         float valueFloat(float def = 0) const;
+        int limitInt(int min, int max, int def = 0) const;
+        long limitLong(long min, long max, long def = 0) const;
+        float limitFloat(float min, float max, float def = 0) const;
 
     private:
         const char *_key;
