@@ -65,6 +65,8 @@ namespace usc
         int limitInt(int min, int max, int def = 0) const;
         long limitLong(long min, long max, long def = 0) const;
         float limitFloat(float min, float max, float def = 0) const;
+        bool copy(char *dest, int n) const;
+        int copyn(char *dest, int n) const;
 
     private:
         const char *_key;

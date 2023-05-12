@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "USCommand.h"
 
 /**
@@ -171,6 +172,32 @@ namespace usc
     }
     long KeyVal::valueLong(Base base, long def) const {
         return _value ? strtol(_value, NULL, (int)base) : def;
+    }
+    bool KeyVal::copy(char *dest, int n) const {
+        if (!_value || strlen(_value) < n) {
+            return false;
+        }
+        for (int i = 0; i < n; i++) {
+            dest[i] = _value[i];
+        }
+        dest[n] = 0;
+
+        return true;
+    }
+    int KeyVal::copyn(char *dest, int n) const {
+        int ns;
+        if (_value || (ns = strlen(_value)) == 0) {
+            return 0;
+        }
+        if (ns < n) {
+            n = ns;
+        }
+        for (int i = 0; i < n; i++) {
+            dest[i] = _value[i];
+        }
+        dest[n] = 0;
+
+        return n;
     }
 
     int KeyVal::limitInt(int min, int max, int def) const {
